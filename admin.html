@@ -1,754 +1,380 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Canteen Honesty System</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #666;
-            font-size: 1.1em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #666;
-            font-size: 1.1em;
-        }
-
-        .main-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .section-title {
-            font-size: 1.8em;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .actions {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: #333;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #222;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .data-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #333;
-            position: sticky;
-            top: 0;
-        }
-
-        .data-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .checkbox-cell {
-            width: 50px;
-            text-align: center;
-        }
-
-        .checkbox-cell input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #333;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #333;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 1px solid #f5c6cb;
-        }
-
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 1px solid #c3e6cb;
-        }
-
-        .filters {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-input {
-            padding: 10px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }
-
-        .filter-input:focus {
-            outline: none;
-            border-color: #333;
-        }
-
-        .item-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            background: #e9ecef;
-            border-radius: 15px;
-            font-size: 0.85em;
-            margin: 2px;
-        }
-
-        .auth-section {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            max-width: 400px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .auth-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1em;
-            margin-bottom: 20px;
-            transition: border-color 0.3s ease;
-        }
-
-        .auth-input:focus {
-            outline: none;
-            border-color: #333;
-        }
-
-        @media (max-width: 768px) {
-            .actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .data-table {
-                font-size: 0.9em;
-            }
-            
-            .data-table th,
-            .data-table td {
-                padding: 10px 8px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Canteen Honesty System</title>
+  <style>
+    *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f5f5f5;margin:0;padding:24px}
+    .container{max-width:1100px;margin:0 auto}
+    .card{background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px;margin-bottom:20px}
+    .flex{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    h1{margin:0 0 6px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+    .stat{padding:18px;border-radius:12px;background:#fafafa;border:1px solid #eee;text-align:center}
+    .stat b{display:block;font-size:28px;margin-bottom:4px}
+    .row{overflow:auto}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+    th{position:sticky;top:0;background:#fafafa;font-weight:600}
+    .badge{display:inline-block;background:#eef0f3;border:1px solid #e2e6ea;border-radius:999px;padding:2px 8px;margin:2px 6px 2px 0;font-size:.85em}
+    .btn{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .b1{background:#222;color:#fff}.b2{background:#6c757d;color:#fff}.b3{background:#28a745;color:#fff}.b4{background:#dc3545;color:#fff}
+    .input{padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px}
+    .auth{max-width:380px;margin:12vh auto}
+    .msg{padding:12px;border-radius:10px;margin:10px 0}
+    .ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .muted{color:#666}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Authentication Section -->
-        <div id="authSection" class="auth-section">
-            <h2>Admin Access Required</h2>
-            <p style="margin: 20px 0; color: #666;">Enter the admin password to access the dashboard</p>
-            <input type="password" id="adminPassword" class="auth-input" placeholder="Admin Password">
-            <button onclick="authenticate()" class="btn btn-primary" style="width: 100%;">Access Dashboard</button>
-            <div id="authError" style="color: #dc3545; margin-top: 15px; display: none;"></div>
+<div class="container">
+
+  <!-- AUTH -->
+  <div id="auth" class="card auth">
+    <h2>Admin Access</h2>
+    <p class="muted">Enter the admin password.</p>
+    <input id="pw" type="password" class="input" placeholder="Admin password" style="width:100%;margin:10px 0 12px">
+    <button class="btn b1" style="width:100%" onclick="auth()">Continue</button>
+    <div id="authErr" class="msg err" style="display:none"></div>
+  </div>
+
+  <!-- DASH -->
+  <div id="dash" style="display:none">
+    <div class="card">
+      <div class="flex" style="justify-content:space-between">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <div class="muted">Canteen Honesty System — Outstanding Items</div>
         </div>
-
-        <!-- Main Dashboard (hidden initially) -->
-        <div id="dashboard" style="display: none;">
-            <div class="header">
-                <h1>Admin Dashboard</h1>
-                <p>Canteen Honesty System - Outstanding Items Management</p>
-                <button onclick="logout()" class="btn btn-secondary" style="margin-top: 15px;">Logout</button>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalEntries">-</div>
-                    <div class="stat-label">Total Entries</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalItems">-</div>
-                    <div class="stat-label">Outstanding Items</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="uniqueUsers">-</div>
-                    <div class="stat-label">Unique Users</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="todayEntries">-</div>
-                    <div class="stat-label">Today's Entries</div>
-                </div>
-            </div>
-
-            <div class="main-content">
-                <div class="section-header">
-                    <h2 class="section-title">Outstanding Items</h2>
-                    <div class="actions">
-                        <button onclick="refreshData()" class="btn btn-secondary" id="refreshBtn">
-                            🔄 Refresh Data
-                        </button>
-                        <button onclick="exportSelected()" class="btn btn-primary" id="exportBtn" disabled>
-                            📊 Export Selected
-                        </button>
-                        <button onclick="deleteSelected()" class="btn btn-danger" id="deleteBtn" disabled>
-                            🗑️ Delete Selected
-                        </button>
-                    </div>
-                </div>
-
-                <div class="filters">
-                    <input type="text" id="nameFilter" class="filter-input" placeholder="Filter by name...">
-                    <input type="date" id="dateFilter" class="filter-input">
-                    <select id="itemFilter" class="filter-input">
-                        <option value="">All Items</option>
-                        <option value="sandwich">Sandwich</option>
-                        <option value="drink">Drink</option>
-                        <option value="chocolate">Chocolate Bar</option>
-                        <option value="pastry">Pastry</option>
-                    </select>
-                    <button onclick="clearFilters()" class="btn btn-secondary">Clear Filters</button>
-                </div>
-
-                <div id="messageArea"></div>
-
-                <div id="loadingArea" class="loading">
-                    <div class="loading-spinner"></div>
-                    <p>Loading data from Google Sheets...</p>
-                </div>
-
-                <div id="dataArea" style="display: none;">
-                    <div style="margin-bottom: 15px;">
-                        <label>
-                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                            Select All Visible
-                        </label>
-                    </div>
-                    
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th class="checkbox-cell">Select</th>
-                                    <th>Date & Time</th>
-                                    <th>Name</th>
-                                    <th>Items</th>
-                                    <th>Total Items</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dataTableBody">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div class="flex">
+          <button class="btn b2" onclick="logout()">Logout</button>
         </div>
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <div class="stat"><b id="s_total">-</b>Total Entries</div>
+        <div class="stat"><b id="s_items">-</b>Outstanding Items</div>
+        <div class="stat"><b id="s_users">-</b>Unique Users</div>
+        <div class="stat"><b id="s_today">-</b>Today's Entries</div>
+      </div>
     </div>
 
-    <script>
-        // Configuration
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzek8ORbrHqFPGz7VLPVHaVhr8HpwYZF-GIRb25BA2yY7fACwa-qk_NUHKpnpIb4cTh4w/exec';
-        const SECRET_KEY = 'jhgghfaj;uryworu3qeghfrrfewfqf';
-        const ADMIN_PASSWORD = 'admin123'; // Change this to your desired admin password
-        
-        let allData = [];
-        let filteredData = [];
-        let selectedEntries = new Set();
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;margin-bottom:10px">
+        <h3 style="margin:0">Outstanding Items</h3>
+        <div class="flex">
+          <button id="btnRefresh" class="btn b2" onclick="refresh()">Refresh</button>
+          <button id="btnExport" class="btn b1" onclick="exportSelected()" disabled>Export selected</button>
+          <button id="btnPaid" class="btn b3" onclick="markPaid()" disabled>Mark paid</button>
+          <button id="btnDelete" class="btn b4" onclick="deleteSelected()" disabled>Delete</button>
+        </div>
+      </div>
 
-        // Authentication
-        function authenticate() {
-            const password = document.getElementById('adminPassword').value;
-            const errorDiv = document.getElementById('authError');
-            
-            if (password === ADMIN_PASSWORD) {
-                document.getElementById('authSection').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                loadData();
-            } else {
-                errorDiv.textContent = 'Invalid password. Please try again.';
-                errorDiv.style.display = 'block';
-            }
-        }
+      <div class="flex" style="margin-bottom:10px">
+        <input id="f_name" class="input" placeholder="Filter by name">
+        <input id="f_date" class="input" type="date">
+        <select id="f_item" class="input">
+          <option value="">All items</option>
+          <option value="sandwich">Sandwich</option>
+          <option value="drink">Drink</option>
+          <option value="chocolate">Chocolate Bar</option>
+          <option value="pastry">Pastry</option>
+        </select>
+        <button class="btn b2" onclick="clearFilters()">Clear</button>
+      </div>
 
-        function logout() {
-            document.getElementById('authSection').style.display = 'block';
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('adminPassword').value = '';
-            document.getElementById('authError').style.display = 'none';
-        }
+      <div id="msg"></div>
 
-        // Data loading
-        async function loadData() {
-            showLoading();
-            try {
-                // Since we can't directly read from Google Sheets with no-cors,
-                // we'll simulate data loading. In a real implementation,
-                // you'd need a GET endpoint in your Google Apps Script
-                
-                // For now, we'll use demo data
-                await simulateDataLoad();
-                
-            } catch (error) {
-                showError('Failed to load data: ' + error.message);
-            }
-        }
+      <div id="loading" class="muted">Loading data...</div>
 
-        async function simulateDataLoad() {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Demo data - replace this with actual Google Sheets data
-            allData = [
-                {
-                    id: 1,
-                    timestamp: '2025-08-22T09:30:00Z',
-                    displayTimestamp: '22/08/2025, 09:30:00',
-                    name: 'John Doe',
-                    items: ['sandwich', 'drink'],
-                    itemCount: 2
-                },
-                {
-                    id: 2,
-                    timestamp: '2025-08-22T10:15:00Z',
-                    displayTimestamp: '22/08/2025, 10:15:00',
-                    name: 'Jane Smith',
-                    items: ['chocolate'],
-                    itemCount: 1
-                },
-                {
-                    id: 3,
-                    timestamp: '2025-08-22T11:00:00Z',
-                    displayTimestamp: '22/08/2025, 11:00:00',
-                    name: 'Bob Johnson',
-                    items: ['pastry', 'drink', 'chocolate'],
-                    itemCount: 3
-                }
-            ];
-            
-            processData();
-        }
+      <div id="data" style="display:none">
+        <label><input id="chkAll" type="checkbox" onclick="toggleAll()"> Select all visible</label>
+        <div class="row">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px">Select</th>
+                <th>Date & Time</th>
+                <th>Name</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function processData() {
-            filteredData = [...allData];
-            updateStats();
-            updateTable();
-            hideLoading();
-        }
+<script>
+// ===== CONFIG =====
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzek8ORbrHqFPGz7VLPVHaVhr8HpwYZF-GIRb25BA2yY7fACwa-qk_NUHKpnpIb4cTh4w/exec";
+const SECRET_KEY = "jhgghfaj;uryworu3qeghfrrfewfqf";
+const ADMIN_PASSWORD = "admin123"; // client-side convenience only
 
-        function updateStats() {
-            const totalEntries = allData.length;
-            const totalItems = allData.reduce((sum, entry) => sum + entry.itemCount, 0);
-            const uniqueUsers = new Set(allData.map(entry => entry.name)).size;
-            
-            const today = new Date().toDateString();
-            const todayEntries = allData.filter(entry => 
-                new Date(entry.timestamp).toDateString() === today
-            ).length;
+// ===== STATE =====
+let allData = [];
+let filtered = [];
+let selected = new Set();
 
-            document.getElementById('totalEntries').textContent = totalEntries;
-            document.getElementById('totalItems').textContent = totalItems;
-            document.getElementById('uniqueUsers').textContent = uniqueUsers;
-            document.getElementById('todayEntries').textContent = todayEntries;
-        }
+// ===== AUTH =====
+function auth(){
+  const val = document.getElementById("pw").value;
+  const err = document.getElementById("authErr");
+  err.style.display = "none";
+  if(val === ADMIN_PASSWORD){
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("dash").style.display = "block";
+    load();
+  }else{
+    err.textContent = "Invalid password. Try again.";
+    err.style.display = "block";
+  }
+}
+function logout(){
+  document.getElementById("dash").style.display = "none";
+  document.getElementById("auth").style.display = "block";
+  document.getElementById("pw").value = "";
+  document.getElementById("authErr").style.display = "none";
+}
 
-        function updateTable() {
-            const tbody = document.getElementById('dataTableBody');
-            
-            if (filteredData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666; padding: 40px;">No entries found</td></tr>';
-                return;
-            }
+// ===== LOAD (JSONP) =====
+async function load(){
+  showLoading(true);
+  try{
+    await loadJSONP();
+    processAndRender();
+  }catch(e){
+    showMsg("Failed to load data: " + e.message, true);
+  }finally{
+    showLoading(false);
+  }
+}
 
-            tbody.innerHTML = filteredData.map(entry => `
-                <tr>
-                    <td class="checkbox-cell">
-                        <input type="checkbox" value="${entry.id}" onchange="toggleEntrySelection(${entry.id})">
-                    </td>
-                    <td>${entry.displayTimestamp}</td>
-                    <td><strong>${entry.name}</strong></td>
-                    <td>
-                        ${entry.items.map(item => `<span class="item-badge">${item}</span>`).join('')}
-                    </td>
-                    <td>${entry.itemCount}</td>
-                    <td>
-                        <button onclick="deleteEntry(${entry.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.9em;">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            
-            updateActionButtons();
-        }
-
-        // Selection management
-        function toggleEntrySelection(entryId) {
-            const checkbox = document.querySelector(`input[value="${entryId}"]`);
-            if (checkbox.checked) {
-                selectedEntries.add(entryId);
-            } else {
-                selectedEntries.delete(entryId);
-            }
-            updateActionButtons();
-        }
-
-        function toggleSelectAll() {
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('#dataTableBody input[type="checkbox"]');
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-                const entryId = parseInt(checkbox.value);
-                if (selectAllCheckbox.checked) {
-                    selectedEntries.add(entryId);
-                } else {
-                    selectedEntries.delete(entryId);
-                }
-            });
-            
-            updateActionButtons();
-        }
-
-        function updateActionButtons() {
-            const hasSelection = selectedEntries.size > 0;
-            document.getElementById('exportBtn').disabled = !hasSelection;
-            document.getElementById('deleteBtn').disabled = !hasSelection;
-        }
-
-        // Filtering
-        function applyFilters() {
-            const nameFilter = document.getElementById('nameFilter').value.toLowerCase();
-            const dateFilter = document.getElementById('dateFilter').value;
-            const itemFilter = document.getElementById('itemFilter').value;
-
-            filteredData = allData.filter(entry => {
-                const matchesName = !nameFilter || entry.name.toLowerCase().includes(nameFilter);
-                const matchesDate = !dateFilter || entry.timestamp.startsWith(dateFilter);
-                const matchesItem = !itemFilter || entry.items.includes(itemFilter);
-                
-                return matchesName && matchesDate && matchesItem;
-            });
-
-            selectedEntries.clear();
-            document.getElementById('selectAll').checked = false;
-            updateTable();
-        }
-
-        function clearFilters() {
-            document.getElementById('nameFilter').value = '';
-            document.getElementById('dateFilter').value = '';
-            document.getElementById('itemFilter').value = '';
-            applyFilters();
-        }
-
-        // Actions
-        async function refreshData() {
-            const btn = document.getElementById('refreshBtn');
-            btn.disabled = true;
-            btn.textContent = '🔄 Refreshing...';
-            
-            try {
-                await loadData();
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '🔄 Refresh Data';
-            }
-        }
-
-        function exportSelected() {
-            if (selectedEntries.size === 0) return;
-            
-            const selectedData = allData.filter(entry => selectedEntries.has(entry.id));
-            const csvContent = convertToCSV(selectedData);
-            downloadCSV(csvContent, `canteen-selected-${new Date().toISOString().split('T')[0]}.csv`);
-            
-            showSuccess(`Exported ${selectedEntries.size} selected entries to CSV`);
-        }
-
-        function convertToCSV(data) {
-            const headers = ['Date & Time', 'Name', 'Items', 'Item Count'];
-            const rows = data.map(entry => [
-                entry.displayTimestamp,
-                entry.name,
-                entry.items.join('; '),
-                entry.itemCount
-            ]);
-            
-            const csvContent = [headers, ...rows]
-                .map(row => row.map(field => `"${field}"`).join(','))
-                .join('\n');
-                
-            return csvContent;
-        }
-
-        function downloadCSV(csvContent, filename) {
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-
-        async function deleteSelected() {
-            if (selectedEntries.size === 0) return;
-            
-            const count = selectedEntries.size;
-            if (!confirm(`Are you sure you want to delete ${count} selected entries? This action cannot be undone.`)) {
-                return;
-            }
-            
-            try {
-                // In a real implementation, send delete request to Google Sheets
-                // For demo, just remove from local data
-                allData = allData.filter(entry => !selectedEntries.has(entry.id));
-                selectedEntries.clear();
-                document.getElementById('selectAll').checked = false;
-                
-                processData();
-                showSuccess(`Successfully deleted ${count} entries`);
-                
-            } catch (error) {
-                showError('Failed to delete entries: ' + error.message);
-            }
-        }
-
-        async function deleteEntry(entryId) {
-            if (!confirm('Are you sure you want to delete this entry?')) return;
-            
-            try {
-                // In a real implementation, send delete request to Google Sheets
-                allData = allData.filter(entry => entry.id !== entryId);
-                selectedEntries.delete(entryId);
-                
-                processData();
-                showSuccess('Entry deleted successfully');
-                
-            } catch (error) {
-                showError('Failed to delete entry: ' + error.message);
-            }
-        }
-
-        // UI helpers
-        function showLoading() {
-            document.getElementById('loadingArea').style.display = 'block';
-            document.getElementById('dataArea').style.display = 'none';
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingArea').style.display = 'none';
-            document.getElementById('dataArea').style.display = 'block';
-        }
-
-        function showMessage(message, className) {
-            const messageArea = document.getElementById('messageArea');
-            messageArea.innerHTML = `<div class="${className}">${message}</div>`;
-            setTimeout(() => {
-                messageArea.innerHTML = '';
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            showMessage(message, 'success');
-        }
-
-        function showError(message) {
-            showMessage(message, 'error');
-        }
-
-        // Event listeners
-        document.getElementById('nameFilter').addEventListener('input', applyFilters);
-        document.getElementById('dateFilter').addEventListener('change', applyFilters);
-        document.getElementById('itemFilter').addEventListener('change', applyFilters);
-        
-        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                authenticate();
-            }
+function loadJSONP(){
+  return new Promise((resolve, reject)=>{
+    const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random()*1e6);
+    const cleanup = () => {
+      delete window[cb];
+      if(script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timer);
+    };
+    window[cb] = (payload)=>{
+      try{
+        if(!payload || !payload.success){ throw new Error(payload && payload.error ? payload.error : "Unknown error"); }
+        let entries = payload.entries || [];
+        // Normalize
+        allData = entries.map((e, i)=>{
+          const ts = e.timestamp ? new Date(e.timestamp) : new Date();
+          return {
+            id: e.id || (i+1),
+            timestamp: ts.toISOString(),
+            displayTimestamp: formatDT(ts),
+            name: e.name || "",
+            items: Array.isArray(e.items) ? e.items : (e.items ? String(e.items).split(",").map(s=>s.trim()) : []),
+            itemCount: Number(e.itemCount || (Array.isArray(e.items) ? e.items.length : 0))
+          };
         });
+        resolve();
+      }catch(err){ reject(err); }
+      finally{ cleanup(); }
+    };
+    const script = document.createElement("script");
+    const url = `${GOOGLE_SCRIPT_URL}?action=getData&secret=${encodeURIComponent(SECRET_KEY)}&callback=${cb}`;
+    script.src = url;
+    script.onerror = ()=>{ cleanup(); reject(new Error("JSONP load failed")); };
+    document.body.appendChild(script);
+    const timer = setTimeout(()=>{ cleanup(); reject(new Error("Request timeout")); }, 12000);
+  });
+}
 
-        // Console commands
-        console.log('=== CANTEEN ADMIN DASHBOARD ===');
-        console.log('Available commands:');
-        console.log('- allData - View all loaded data');
-        console.log('- refreshData() - Refresh data from Google Sheets');
-        console.log('- exportSelected() - Export selected entries');
-        console.log('- clearFilters() - Clear all filters');
-    </script>
+// ===== RENDER =====
+function processAndRender(){
+  applyFilters(); // sets filtered
+  updateStats();
+  renderTable();
+}
+function updateStats(){
+  const total = allData.length;
+  const items = allData.reduce((a,c)=>a + (c.itemCount||0), 0);
+  const users = new Set(allData.map(x=>x.name)).size;
+  const today = new Date().toDateString();
+  const todayCount = allData.filter(x=> new Date(x.timestamp).toDateString() === today ).length;
+  byId("s_total").textContent = total;
+  byId("s_items").textContent = items;
+  byId("s_users").textContent = users;
+  byId("s_today").textContent = todayCount;
+}
+function renderTable(){
+  const tb = byId("tbody");
+  if(filtered.length === 0){
+    tb.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;padding:28px">No entries found</td></tr>`;
+  }else{
+    tb.innerHTML = filtered.map(e=>`
+      <tr>
+        <td><input type="checkbox" data-id="${e.id}" onchange="toggleOne(${e.id}, this.checked)" ${selected.has(e.id)?'checked':''}></td>
+        <td>${e.displayTimestamp}</td>
+        <td><strong>${escapeHtml(e.name)}</strong></td>
+        <td>${e.items.map(it=>`<span class="badge">${escapeHtml(it)}</span>`).join("")}</td>
+        <td>${e.itemCount}</td>
+        <td>
+          <button class="btn b3" onclick="markOnePaid(${e.id})">Paid</button>
+          <button class="btn b4" onclick="deleteOne(${e.id})">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+  updateActionButtons();
+  byId("data").style.display = "block";
+}
+
+function updateActionButtons(){
+  const hasAny = selected.size > 0;
+  byId("btnExport").disabled = !hasAny;
+  byId("btnPaid").disabled = !hasAny;
+  byId("btnDelete").disabled = !hasAny;
+}
+
+// ===== FILTERS =====
+function applyFilters(){
+  const n = byId("f_name").value.trim().toLowerCase();
+  const d = byId("f_date").value; // yyyy-mm-dd
+  const it = byId("f_item").value;
+  filtered = allData.filter(e=>{
+    const okN = !n || e.name.toLowerCase().includes(n);
+    const okD = !d || (e.timestamp || "").startsWith(d);
+    const okI = !it || (Array.isArray(e.items) && e.items.includes(it));
+    return okN && okD && okI;
+  });
+  // keep selected set only for visible rows
+  selected = new Set([...selected].filter(id=> filtered.some(x=>x.id===id)));
+}
+function clearFilters(){
+  byId("f_name").value = "";
+  byId("f_date").value = "";
+  byId("f_item").value = "";
+  applyFilters();
+  renderTable();
+}
+
+// ===== SELECTION =====
+function toggleOne(id, on){
+  if(on) selected.add(id); else selected.delete(id);
+  updateActionButtons();
+}
+function toggleAll(){
+  const on = byId("chkAll").checked;
+  selected.clear();
+  filtered.forEach(e=>{ if(on) selected.add(e.id); });
+  renderTable();
+}
+
+// ===== ACTIONS =====
+function refresh(){
+  const b = byId("btnRefresh");
+  b.disabled = true; b.textContent = "Refreshing...";
+  load().finally(()=>{ b.disabled = false; b.textContent = "Refresh"; });
+}
+function exportSelected(){
+  if(selected.size===0) return;
+  const sel = allData.filter(e=> selected.has(e.id));
+  const headers = ["Date & Time","Name","Items","Item Count"];
+  const rows = sel.map(e=>[e.displayTimestamp, e.name, e.items.join("; "), e.itemCount]);
+  const csv = [headers, ...rows].map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "canteen-selected.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showMsg(`Exported ${sel.length} entries.`, false);
+}
+async function markPaid(){
+  if(selected.size===0) return;
+  const sel = allData.filter(e=> selected.has(e.id));
+  if(!confirm(`Mark ${sel.length} entr${sel.length>1?'ies':'y'} as PAID and remove?`)) return;
+  await postToScript("markPaid", { entries: sel, paidAt: new Date().toISOString(), paidBy: "admin" });
+  // remove locally
+  allData = allData.filter(e=> !selected.has(e.id));
+  selected.clear();
+  processAndRender();
+  showMsg("Marked as paid.", false);
+}
+async function markOnePaid(id){
+  const e = allData.find(x=>x.id===id);
+  if(!e) return;
+  if(!confirm(`Mark ${e.name} (${e.items.join(", ")}) as PAID?`)) return;
+  await postToScript("markPaid", { entries: [e], paidAt: new Date().toISOString(), paidBy: "admin" });
+  allData = allData.filter(x=>x.id!==id);
+  selected.delete(id);
+  processAndRender();
+  showMsg("Entry marked as paid.", false);
+}
+async function deleteSelected(){
+  if(selected.size===0) return;
+  if(!confirm(`Delete ${selected.size} selected entr${selected.size>1?'ies':'y'}? This cannot be undone.`)) return;
+  const ids = [...selected];
+  await postToScript("deleteEntries", { ids });
+  allData = allData.filter(e=> !selected.has(e.id));
+  selected.clear();
+  processAndRender();
+  showMsg("Deleted selected entries.", false);
+}
+async function deleteOne(id){
+  if(!confirm("Delete this entry?")) return;
+  await postToScript("deleteEntries", { ids:[id] });
+  allData = allData.filter(e=> e.id!==id);
+  selected.delete(id);
+  processAndRender();
+  showMsg("Entry deleted.", false);
+}
+
+// ===== APPS SCRIPT POST =====
+async function postToScript(action, payload){
+  // Note: no-cors -> opaque. We assume success server-side.
+  try{
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      mode:"no-cors",
+      body: JSON.stringify(Object.assign({ action, secret: SECRET_KEY }, payload||{}))
+    });
+  }catch(e){
+    showMsg("Failed to contact server: " + e.message, true);
+  }
+}
+
+// ===== UTILS =====
+function byId(id){ return document.getElementById(id); }
+function showLoading(on){
+  byId("loading").style.display = on ? "block" : "none";
+  byId("data").style.display = on ? "none" : "block";
+}
+function showMsg(text, isErr){
+  const el = byId("msg");
+  el.innerHTML = `<div class="msg ${isErr?'err':'ok'}">${escapeHtml(text)}</div>`;
+  setTimeout(()=>{ el.innerHTML = ""; }, isErr ? 7000 : 5000);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function pad(n){ return n<10 ? "0"+n : ""+n; }
+function formatDT(d){
+  // dd/mm/yyyy, HH:MM:SS
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+// ===== EVENTS =====
+byId("f_name").addEventListener("input", ()=>{ applyFilters(); renderTable(); });
+byId("f_date").addEventListener("change", ()=>{ applyFilters(); renderTable(); });
+byId("f_item").addEventListener("change", ()=>{ applyFilters(); renderTable(); });
+
+console.log("Admin page loaded. JSONP reader active.");
+</script>
 </body>
 </html>
