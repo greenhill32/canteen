@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Canteen Honesty System</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 40px;
+    }
+
+    .admin-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .entry {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-family: monospace;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .entry-name {
+      flex: 1;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-export {
+      background: #333;
+      color: white;
+    }
+
+    .btn-clear {
+      background: #b00020;
+      color: white;
+    }
+
+    .btn-paid {
+      background: #00695c;
+      color: white;
+      margin-left: 10px;
+    }
+
+    .highlight {
+      color: #b00020;
+      font-weight: bold;
+    }
+
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <h1>Admin Dashboard</h1>
+
+    <div class="section">
+      <div class="section-title">Outstanding Items</div>
+      <div id="debtList">Loading...</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Actions</div>
+      <button class="btn btn-export" onclick="downloadCSV()">Export as CSV</button>
+      <button class="btn btn-clear" onclick="clearSelectedUsers()">Delete Selected</button>
+    </div>
+  </div>
+
+  <script>
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzek8ORbrHqFPGz7VLPVHaVhr8HpwYZF-GIRb25BA2yY7fACwa-qk_NUHKpnpIb4cTh4w/exec';
+    const SECRET_KEY = 'jhgghfaj;uryworu3qeghfrrfewfqf';
+
+    let debtEntries = [];
+
+    async function loadDebt() {
+      const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=list&secret=${SECRET_KEY}`);
+      const result = await response.json();
+
+      if (!result.success) {
+        document.getElementById('debtList').textContent = 'Failed to load data.';
+        return;
+      }
+
+      const grouped = {};
+      result.entries.forEach(entry => {
+        if (!grouped[entry.name]) grouped[entry.name] = [];
+        grouped[entry.name].push(...entry.items);
+      });
+
+      debtEntries = grouped;
+      renderList();
+    }
+
+    function renderList() {
+      const container = document.getElementById('debtList');
+      if (Object.keys(debtEntries).length === 0) {
+        container.textContent = 'No outstanding items.';
+        return;
+      }
+
+      container.innerHTML = Object.entries(debtEntries).map(([name, items]) => {
+        return `
+          <div class="entry">
+            <label><input type="checkbox" class="user-check" value="${name}"></label>
+            <div class="entry-name">${name} - <span class="highlight">${items.length} item(s)</span></div>
+            <button class="btn btn-paid" onclick="clearUserDebt('${name}')">Paid</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function downloadCSV() {
+      const rows = [['Name', 'Item']];
+      Object.entries(debtEntries).forEach(([name, items]) => {
+        items.forEach(item => rows.push([name, item]));
+      });
+
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'canteen-outstanding.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function clearUserDebt(name) {
+      if (!confirm(`Clear debt for ${name}?`)) return;
+      const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=clearUser&user=${encodeURIComponent(name)}&secret=${SECRET_KEY}`);
+      const result = await res.json();
+      if (result.success) {
+        alert(`Cleared ${result.cleared} row(s) for ${name}`);
+        loadDebt();
+      } else {
+        alert('Failed to clear debt.');
+      }
+    }
+
+    async function clearSelectedUsers() {
+      const checkboxes = document.querySelectorAll('.user-check:checked');
+      for (let cb of checkboxes) {
+        await clearUserDebt(cb.value);
+      }
+    }
+
+    loadDebt();
+  </script>
+</body>
+</html>

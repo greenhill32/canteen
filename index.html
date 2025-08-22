@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canteen Honesty System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .header {
+            background: white;
+            color: #333;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: block;
+            border-radius: 50%;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            color: #333;
+        }
+
+        .policy-text {
+            font-size: 1.1em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .items-section {
+            margin-bottom: 30px;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .item-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .item-checkbox:hover {
+            border-color: #333;
+            background: #f8f8f8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .item-checkbox.selected {
+            border-color: #333;
+            background: #f0f0f0;
+        }
+
+        .item-checkbox input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: #333;
+        }
+
+        .item-label {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .name-section {
+            margin-bottom: 30px;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2em;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: #333;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: white;
+            background: #333;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            background: #222;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit-btn.loading {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .thank-you {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: #f8f8f8;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .thank-you.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        .thank-you h2 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .thank-you p {
+            font-size: 1.1em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .reset-btn:hover {
+            background: #222;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .data-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .data-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .data-count {
+            background: #333;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .data-entries {
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .data-entry {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .data-entry:last-child {
+            border-bottom: none;
+        }
+
+        .export-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .export-btn:hover {
+            background: #222;
+        }
+
+        .clear-btn {
+            margin-top: 15px;
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: #666;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .clear-btn:hover {
+            background: #555;
+        }
+
+        .sheets-status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #2d5f2d;
+            text-align: center;
+        }
+
+        .sheets-status.error {
+            background: #ffe8e8;
+            color: #8b0000;
+        }
+
+        @media (max-width: 768px) {
+            .items-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .form-container {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="Company Logo" class="logo">
+            <h1>Canteen Honesty System</h1>
+            <p class="policy-text">Please record what you've taken from the canteen. This system runs on trust and good faith. No surveillance, no judgment — just fairness for everyone.</p>
+        </div>
+
+        <div class="form-container">
+            <form id="canteenForm">
+                <div class="items-section">
+                    <div class="items-grid">
+                        <label class="item-checkbox">
+                            <input type="checkbox" name="sandwich" value="sandwich">
+                            <span class="item-label">🥪 Sandwich</span>
+                        </label>
+
+                        <label class="item-checkbox">
+                            <input type="checkbox" name="drink" value="drink">
+                            <span class="item-label">🥤 Drink</span>
+                        </label>
+
+                        <label class="item-checkbox">
+                            <input type="checkbox" name="chocolate" value="chocolate">
+                            <span class="item-label">🍫 Chocolate Bar</span>
+                        </label>
+
+                        <label class="item-checkbox">
+                            <input type="checkbox" name="pastry" value="pastry">
+                            <span class="item-label">🥐 Pastry</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="name-section">
+                    <input type="text" class="name-input" placeholder="Your name" required id="userName">
+                </div>
+
+                <div id="statusMessage" class="status-message"></div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Log My Items</button>
+            </form>
+
+            <div class="thank-you" id="thankYou">
+                <h2>Thank You!</h2>
+                <p>Your entry has been logged successfully.</p>
+                <div class="timestamp" id="timestampDisplay"></div>
+                <div id="sheetsStatus" class="sheets-status">✓ Saved to Google Sheets</div>
+                <button class="reset-btn" onclick="resetForm()">Log Another Entry</button>
+            </div>
+
+            <div class="data-section">
+                <div class="data-header">
+                    <span class="data-title">Local Entries</span>
+                    <span class="data-count" id="entryCount">0 entries</span>
+                </div>
+                <div class="data-entries" id="dataEntries">
+                    <p style="color: #666; text-align: center;">No entries yet</p>
+                </div>
+                <button class="export-btn" onclick="exportData()">Export as JSON</button>
+                <button class="clear-btn" onclick="clearAllData()">Clear Local Data</button>
+                <p style="font-size: 0.8em; color: #666; margin-top: 10px; text-align: center;">
+                    Note: Data is automatically synced to Google Sheets. Local data is for your reference only.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let entries = [];
+        
+        // Google Apps Script configuration
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzek8ORbrHqFPGz7VLPVHaVhr8HpwYZF-GIRb25BA2yY7fACwa-qk_NUHKpnpIb4cTh4w/exec';
+        const SECRET_KEY = 'jhgghfaj;uryworu3qeghfrrfewfqf';
+
+        // Send data to Google Sheets
+        async function sendToGoogleSheets(entryData) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Google Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        secret: SECRET_KEY,
+                        ...entryData
+                    })
+                });
+
+                // Note: With no-cors mode, we can't read the response
+                // We'll assume success if no error is thrown
+                return { success: true };
+            } catch (error) {
+                console.error('Error sending to Google Sheets:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Update display of entries
+        function updateDisplay() {
+            const entryCount = document.getElementById('entryCount');
+            const dataEntries = document.getElementById('dataEntries');
+            
+            entryCount.textContent = `${entries.length} entries`;
+            
+            if (entries.length === 0) {
+                dataEntries.innerHTML = '<p style="color: #666; text-align: center;">No entries yet</p>';
+                return;
+            }
+            
+            dataEntries.innerHTML = entries.map((entry, index) => `
+                <div class="data-entry">
+                    <strong>${entry.displayTimestamp}</strong> - ${entry.name}<br>
+                    Items: ${entry.items.length > 0 ? entry.items.join(', ') : 'none'}
+                    ${entry.sheetsSync ? '<span style="color: green; font-weight: bold;"> ✓</span>' : '<span style="color: red; font-weight: bold;"> ✗</span>'}
+                </div>
+            `).join('');
+        }
+
+        // Show status message
+        function showStatus(message, isError = false) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.className = `status-message ${isError ? 'error' : 'success'}`;
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+
+        // Add visual feedback for checkbox selection
+        document.querySelectorAll('.item-checkbox input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.closest('.item-checkbox');
+                if (this.checked) {
+                    label.classList.add('selected');
+                } else {
+                    label.classList.remove('selected');
+                }
+            });
+        });
+
+        // Handle form submission
+        document.getElementById('canteenForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const name = document.getElementById('userName').value.trim();
+            
+            if (!name) {
+                showStatus('Please enter your name', true);
+                return;
+            }
+
+            // Disable form and show loading state
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Saving...';
+
+            // Get current timestamp
+            const now = new Date();
+            const timestamp = now.toLocaleString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            // Collect selected items
+            const selectedItems = [];
+            const checkboxes = this.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedItems.push(checkbox.value);
+            });
+
+            // Create entry object
+            const entry = {
+                timestamp: now.toISOString(),
+                displayTimestamp: timestamp,
+                name: name,
+                items: selectedItems,
+                itemCount: selectedItems.length,
+                sheetsSync: false
+            };
+
+            // Send to Google Sheets
+            const sheetsResult = await sendToGoogleSheets(entry);
+            entry.sheetsSync = sheetsResult.success;
+
+            // Add to local entries array
+            entries.push(entry);
+            updateDisplay();
+
+            // Update button state
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+            submitBtn.textContent = 'Log My Items';
+
+            // Show appropriate status message
+            if (sheetsResult.success) {
+                showStatus('Entry logged successfully and saved to Google Sheets!');
+            } else {
+                showStatus('Entry logged locally, but failed to sync with Google Sheets. Please try again.', true);
+            }
+
+            // Show thank you message
+            document.querySelector('.form-container form').style.display = 'none';
+            const thankYou = document.getElementById('thankYou');
+            const timestampDisplay = document.getElementById('timestampDisplay');
+            const sheetsStatus = document.getElementById('sheetsStatus');
+            
+            timestampDisplay.textContent = `Logged on ${timestamp}`;
+            
+            if (sheetsResult.success) {
+                sheetsStatus.textContent = '✓ Saved to Google Sheets';
+                sheetsStatus.className = 'sheets-status';
+            } else {
+                sheetsStatus.textContent = '✗ Failed to sync with Google Sheets';
+                sheetsStatus.className = 'sheets-status error';
+            }
+            
+            thankYou.classList.add('show');
+
+            console.log('Entry saved:', entry);
+            console.log('Total entries:', entries.length);
+            console.log('Google Sheets sync:', sheetsResult.success ? 'Success' : 'Failed');
+        });
+
+        // Reset form function
+        function resetForm() {
+            document.getElementById('canteenForm').reset();
+            document.querySelectorAll('.item-checkbox').forEach(label => {
+                label.classList.remove('selected');
+            });
+            document.querySelector('.form-container form').style.display = 'block';
+            document.getElementById('thankYou').classList.remove('show');
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        // Export data function
+        function exportData() {
+            if (entries.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(entries, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `canteen-entries-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Clear all local data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all local data? This will not affect data already saved to Google Sheets.')) {
+                entries = [];
+                updateDisplay();
+                console.log('All local data cleared');
+                showStatus('Local data cleared successfully');
+            }
+        }
+
+        // Test Google Sheets connection
+        async function testGoogleSheets() {
+            console.log('Testing Google Sheets connection...');
+            const testData = {
+                timestamp: new Date().toISOString(),
+                displayTimestamp: 'Test Entry',
+                name: 'Test User',
+                items: ['test'],
+                itemCount: 1
+            };
+            
+            const result = await sendToGoogleSheets(testData);
+            console.log('Test result:', result.success ? 'Success' : 'Failed');
+            return result;
+        }
+
+        // Console commands for testing
+        console.log('=== CANTEEN HONESTY SYSTEM WITH GOOGLE SHEETS ===');
+        console.log('Available commands:');
+        console.log('- entries - View all logged entries');
+        console.log('- exportData() - Download all entries as JSON');
+        console.log('- clearAllData() - Clear local data with confirmation');
+        console.log('- testGoogleSheets() - Test Google Sheets connection');
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
