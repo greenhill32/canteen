@@ -27,6 +27,7 @@
     .ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
     .err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
     .muted{color:#666}
+    .debug{background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:12px;margin:10px 0;font-family:monospace;font-size:12px;max-height:200px;overflow:auto}
   </style>
 </head>
 <body>
@@ -39,6 +40,12 @@
     <input id="pw" type="password" class="input" placeholder="Admin password" style="width:100%;margin:10px 0 12px">
     <button class="btn b1" style="width:100%" onclick="auth()">Continue</button>
     <div id="authErr" class="msg err" style="display:none"></div>
+    
+    <!-- Debug Panel -->
+    <div style="margin-top:20px">
+      <button class="btn b2" onclick="testConnection()" style="width:100%">Test Connection</button>
+      <div id="debugOutput" class="debug" style="display:none"></div>
+    </div>
   </div>
 
   <!-- DASH -->
@@ -47,9 +54,10 @@
       <div class="flex" style="justify-content:space-between">
         <div>
           <h1>Admin Dashboard</h1>
-          <div class="muted">Canteen Honesty System — Outstanding Items</div>
+          <div class="muted">Canteen Honesty System – Outstanding Items</div>
         </div>
         <div class="flex">
+          <button class="btn b2" onclick="testConnection()">Test Connection</button>
           <button class="btn b2" onclick="logout()">Logout</button>
         </div>
       </div>
@@ -122,6 +130,35 @@ let allData = [];
 let filtered = [];
 let selected = new Set();
 
+// ===== DEBUG =====
+function debug(message) {
+  console.log('DEBUG:', message);
+  const debugEl = document.getElementById('debugOutput');
+  if (debugEl) {
+    debugEl.style.display = 'block';
+    debugEl.innerHTML += new Date().toLocaleTimeString() + ': ' + escapeHtml(String(message)) + '\n';
+    debugEl.scrollTop = debugEl.scrollHeight;
+  }
+}
+
+function testConnection() {
+  debug('Testing connection to Google Apps Script...');
+  debug('URL: ' + GOOGLE_SCRIPT_URL);
+  debug('Secret Key: ' + SECRET_KEY);
+  
+  loadJSONP().then(() => {
+    debug('✓ Connection successful!');
+    debug('Data loaded: ' + allData.length + ' entries');
+  }).catch(error => {
+    debug('✗ Connection failed: ' + error.message);
+    debug('Common issues:');
+    debug('1. Apps Script not deployed as web app');
+    debug('2. Wrong permissions (should be "Anyone" access)');
+    debug('3. Script not published or URL expired');
+    debug('4. Sheet ID not set correctly in server code');
+  });
+}
+
 // ===== AUTH =====
 function auth(){
   const val = document.getElementById("pw").value;
@@ -136,6 +173,7 @@ function auth(){
     err.style.display = "block";
   }
 }
+
 function logout(){
   document.getElementById("dash").style.display = "none";
   document.getElementById("auth").style.display = "block";
@@ -149,8 +187,11 @@ async function load(){
   try{
     await loadJSONP();
     processAndRender();
+    showMsg('Data loaded successfully: ' + allData.length + ' entries', false);
   }catch(e){
+    console.error('Load error:', e);
     showMsg("Failed to load data: " + e.message, true);
+    debug('Load error: ' + e.message);
   }finally{
     showLoading(false);
   }
@@ -164,10 +205,21 @@ function loadJSONP(){
       if(script.parentNode) script.parentNode.removeChild(script);
       clearTimeout(timer);
     };
+    
     window[cb] = (payload)=>{
+      debug('JSONP Response received');
+      debug('Response: ' + JSON.stringify(payload, null, 2));
+      
       try{
-        if(!payload || !payload.success){ throw new Error(payload && payload.error ? payload.error : "Unknown error"); }
+        if(!payload || !payload.success){ 
+          const errorMsg = payload && payload.error ? payload.error : "Unknown error";
+          debug('Server error: ' + errorMsg);
+          throw new Error(errorMsg); 
+        }
+        
         let entries = payload.entries || [];
+        debug('Raw entries count: ' + entries.length);
+        
         // Normalize
         allData = entries.map((e, i)=>{
           const ts = e.timestamp ? new Date(e.timestamp) : new Date();
@@ -180,16 +232,34 @@ function loadJSONP(){
             itemCount: Number(e.itemCount || (Array.isArray(e.items) ? e.items.length : 0))
           };
         });
+        
+        debug('Normalized entries: ' + allData.length);
         resolve();
-      }catch(err){ reject(err); }
+      }catch(err){ 
+        debug('Parse error: ' + err.message);
+        reject(err); 
+      }
       finally{ cleanup(); }
     };
+    
     const script = document.createElement("script");
     const url = `${GOOGLE_SCRIPT_URL}?action=getData&secret=${encodeURIComponent(SECRET_KEY)}&callback=${cb}`;
+    
+    debug('Making JSONP request to: ' + url);
     script.src = url;
-    script.onerror = ()=>{ cleanup(); reject(new Error("JSONP load failed")); };
+    
+    script.onerror = ()=>{ 
+      debug('JSONP script failed to load - check URL and deployment');
+      cleanup(); 
+      reject(new Error("JSONP load failed - check Apps Script deployment")); 
+    };
+    
     document.body.appendChild(script);
-    const timer = setTimeout(()=>{ cleanup(); reject(new Error("Request timeout")); }, 12000);
+    const timer = setTimeout(()=>{ 
+      debug('Request timeout after 15 seconds');
+      cleanup(); 
+      reject(new Error("Request timeout - server not responding")); 
+    }, 15000);
   });
 }
 
@@ -199,6 +269,7 @@ function processAndRender(){
   updateStats();
   renderTable();
 }
+
 function updateStats(){
   const total = allData.length;
   const items = allData.reduce((a,c)=>a + (c.itemCount||0), 0);
@@ -210,6 +281,7 @@ function updateStats(){
   byId("s_users").textContent = users;
   byId("s_today").textContent = todayCount;
 }
+
 function renderTable(){
   const tb = byId("tbody");
   if(filtered.length === 0){
@@ -254,6 +326,7 @@ function applyFilters(){
   // keep selected set only for visible rows
   selected = new Set([...selected].filter(id=> filtered.some(x=>x.id===id)));
 }
+
 function clearFilters(){
   byId("f_name").value = "";
   byId("f_date").value = "";
@@ -267,6 +340,7 @@ function toggleOne(id, on){
   if(on) selected.add(id); else selected.delete(id);
   updateActionButtons();
 }
+
 function toggleAll(){
   const on = byId("chkAll").checked;
   selected.clear();
@@ -280,6 +354,7 @@ function refresh(){
   b.disabled = true; b.textContent = "Refreshing...";
   load().finally(()=>{ b.disabled = false; b.textContent = "Refresh"; });
 }
+
 function exportSelected(){
   if(selected.size===0) return;
   const sel = allData.filter(e=> selected.has(e.id));
@@ -294,76 +369,111 @@ function exportSelected(){
   URL.revokeObjectURL(a.href);
   showMsg(`Exported ${sel.length} entries.`, false);
 }
+
 async function markPaid(){
   if(selected.size===0) return;
   const sel = allData.filter(e=> selected.has(e.id));
   if(!confirm(`Mark ${sel.length} entr${sel.length>1?'ies':'y'} as PAID and remove?`)) return;
-  await postToScript("markPaid", { entries: sel, paidAt: new Date().toISOString(), paidBy: "admin" });
-  // remove locally
-  allData = allData.filter(e=> !selected.has(e.id));
-  selected.clear();
-  processAndRender();
-  showMsg("Marked as paid.", false);
+  
+  try {
+    await postToScript("markPaid", { entries: sel, paidAt: new Date().toISOString(), paidBy: "admin" });
+    // remove locally
+    allData = allData.filter(e=> !selected.has(e.id));
+    selected.clear();
+    processAndRender();
+    showMsg("Marked as paid.", false);
+  } catch (error) {
+    showMsg("Failed to mark as paid: " + error.message, true);
+  }
 }
+
 async function markOnePaid(id){
   const e = allData.find(x=>x.id===id);
   if(!e) return;
   if(!confirm(`Mark ${e.name} (${e.items.join(", ")}) as PAID?`)) return;
-  await postToScript("markPaid", { entries: [e], paidAt: new Date().toISOString(), paidBy: "admin" });
-  allData = allData.filter(x=>x.id!==id);
-  selected.delete(id);
-  processAndRender();
-  showMsg("Entry marked as paid.", false);
+  
+  try {
+    await postToScript("markPaid", { entries: [e], paidAt: new Date().toISOString(), paidBy: "admin" });
+    allData = allData.filter(x=>x.id!==id);
+    selected.delete(id);
+    processAndRender();
+    showMsg("Entry marked as paid.", false);
+  } catch (error) {
+    showMsg("Failed to mark as paid: " + error.message, true);
+  }
 }
+
 async function deleteSelected(){
   if(selected.size===0) return;
   if(!confirm(`Delete ${selected.size} selected entr${selected.size>1?'ies':'y'}? This cannot be undone.`)) return;
-  const ids = [...selected];
-  await postToScript("deleteEntries", { ids });
-  allData = allData.filter(e=> !selected.has(e.id));
-  selected.clear();
-  processAndRender();
-  showMsg("Deleted selected entries.", false);
+  
+  try {
+    const ids = [...selected];
+    await postToScript("deleteEntries", { ids });
+    allData = allData.filter(e=> !selected.has(e.id));
+    selected.clear();
+    processAndRender();
+    showMsg("Deleted selected entries.", false);
+  } catch (error) {
+    showMsg("Failed to delete entries: " + error.message, true);
+  }
 }
+
 async function deleteOne(id){
   if(!confirm("Delete this entry?")) return;
-  await postToScript("deleteEntries", { ids:[id] });
-  allData = allData.filter(e=> e.id!==id);
-  selected.delete(id);
-  processAndRender();
-  showMsg("Entry deleted.", false);
+  
+  try {
+    await postToScript("deleteEntries", { ids:[id] });
+    allData = allData.filter(e=> e.id!==id);
+    selected.delete(id);
+    processAndRender();
+    showMsg("Entry deleted.", false);
+  } catch (error) {
+    showMsg("Failed to delete entry: " + error.message, true);
+  }
 }
 
 // ===== APPS SCRIPT POST =====
 async function postToScript(action, payload){
-  // Note: no-cors -> opaque. We assume success server-side.
+  debug('Posting to server: ' + action);
+  
   try{
-    await fetch(GOOGLE_SCRIPT_URL, {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       mode:"no-cors",
       body: JSON.stringify(Object.assign({ action, secret: SECRET_KEY }, payload||{}))
     });
+    
+    debug('POST request sent (no-cors mode, response opaque)');
+    // Note: no-cors mode means we can't read the response, but the request was sent
+    
   }catch(e){
-    showMsg("Failed to contact server: " + e.message, true);
+    debug('POST error: ' + e.message);
+    throw new Error("Failed to contact server: " + e.message);
   }
 }
 
 // ===== UTILS =====
 function byId(id){ return document.getElementById(id); }
+
 function showLoading(on){
   byId("loading").style.display = on ? "block" : "none";
   byId("data").style.display = on ? "none" : "block";
 }
+
 function showMsg(text, isErr){
   const el = byId("msg");
   el.innerHTML = `<div class="msg ${isErr?'err':'ok'}">${escapeHtml(text)}</div>`;
-  setTimeout(()=>{ el.innerHTML = ""; }, isErr ? 7000 : 5000);
+  setTimeout(()=>{ el.innerHTML = ""; }, isErr ? 10000 : 5000);
 }
+
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
+
 function pad(n){ return n<10 ? "0"+n : ""+n; }
+
 function formatDT(d){
   // dd/mm/yyyy, HH:MM:SS
   return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -374,7 +484,13 @@ byId("f_name").addEventListener("input", ()=>{ applyFilters(); renderTable(); })
 byId("f_date").addEventListener("change", ()=>{ applyFilters(); renderTable(); });
 byId("f_item").addEventListener("change", ()=>{ applyFilters(); renderTable(); });
 
-console.log("Admin page loaded. JSONP reader active.");
+// Press Enter to login
+byId("pw").addEventListener("keypress", (e)=>{
+  if(e.key === 'Enter') auth();
+});
+
+debug("Admin page loaded with debugging enabled");
+console.log("Admin page loaded. JSONP reader active with debugging.");
 </script>
 </body>
 </html>
