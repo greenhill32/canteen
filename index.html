@@ -45,6 +45,39 @@
             <span>Protein Bar</span>
           </label>
         </div>
+        
+        <!-- Misc/Unlisted Items Section -->
+        <div class="mt-4 pt-4 border-t border-gray-200">
+          <label class="block font-medium mb-2">Other/Unlisted Items:</label>
+          <div class="space-y-2">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="miscCheckbox1" class="form-checkbox h-4 w-4" />
+              <label for="miscCheckbox1" class="cursor-pointer">Other item</label>
+            </div>
+            <div id="miscText1" class="ml-6 hidden">
+              <input type="text" id="miscInput1" placeholder="Describe the item..." maxlength="50" 
+                     class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="miscCheckbox2" class="form-checkbox h-4 w-4" />
+              <label for="miscCheckbox2" class="cursor-pointer">Additional item</label>
+            </div>
+            <div id="miscText2" class="ml-6 hidden">
+              <input type="text" id="miscInput2" placeholder="Describe the item..." maxlength="50" 
+                     class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="miscCheckbox3" class="form-checkbox h-4 w-4" />
+              <label for="miscCheckbox3" class="cursor-pointer">Additional item</label>
+            </div>
+            <div id="miscText3" class="ml-6 hidden">
+              <input type="text" id="miscInput3" placeholder="Describe the item..." maxlength="50" 
+                     class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+          </div>
+        </div>
       </div>
       <div>
         <label for="name" class="block font-medium mb-1">Your name:</label>
@@ -70,6 +103,7 @@
 
     // Add visual feedback for checkbox selection
     const checkboxes = document.querySelectorAll('input[name="items"]');
+    
     checkboxes.forEach(checkbox => {
       checkbox.addEventListener('change', function() {
         const label = this.closest('label');
@@ -83,10 +117,38 @@
       });
     });
 
+    // Handle misc checkboxes and text inputs
+    for (let i = 1; i <= 3; i++) {
+      const checkbox = document.getElementById(`miscCheckbox${i}`);
+      const textDiv = document.getElementById(`miscText${i}`);
+      const textInput = document.getElementById(`miscInput${i}`);
+      
+      checkbox.addEventListener('change', function() {
+        if (this.checked) {
+          textDiv.classList.remove('hidden');
+          textInput.focus();
+          this.parentElement.classList.add('bg-blue-50', 'border-blue-200', 'border', 'rounded', 'p-2');
+        } else {
+          textDiv.classList.add('hidden');
+          textInput.value = '';
+          this.parentElement.classList.remove('bg-blue-50', 'border-blue-200', 'border', 'rounded', 'p-2');
+        }
+      });
+    }
+
     form.addEventListener('submit', async (evt) => {
       evt.preventDefault();
       const name = document.getElementById('name').value.trim();
       const selected = Array.from(form.querySelectorAll('input[name="items"]:checked')).map(cb => cb.value);
+      
+      // Add misc items if selected and described
+      for (let i = 1; i <= 3; i++) {
+        const checkbox = document.getElementById(`miscCheckbox${i}`);
+        const textInput = document.getElementById(`miscInput${i}`);
+        if (checkbox.checked && textInput.value.trim()) {
+          selected.push(textInput.value.trim());
+        }
+      }
       
       if (!name || selected.length === 0) {
         showMessage('Please enter your name and select at least one item.', 'error');
@@ -118,6 +180,16 @@
             label.classList.remove('bg-blue-50', 'border-blue-200', 'border');
             label.classList.add('hover:bg-gray-50');
           });
+          // Reset misc sections
+          for (let i = 1; i <= 3; i++) {
+            const checkbox = document.getElementById(`miscCheckbox${i}`);
+            const textDiv = document.getElementById(`miscText${i}`);
+            const textInput = document.getElementById(`miscInput${i}`);
+            checkbox.checked = false;
+            textDiv.classList.add('hidden');
+            textInput.value = '';
+            checkbox.parentElement.classList.remove('bg-blue-50', 'border-blue-200', 'border', 'rounded', 'p-2');
+          }
         } else {
           showMessage(result.message || 'An error occurred.', 'error');
         }
