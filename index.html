@@ -4,115 +4,236 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Canteen Honesty System</title>
-  <!-- Tailwind via CDN for quick styling; remove or self‑host in production -->
+  <!-- Tailwind via CDN for quick styling; remove or self-host in production -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 font-sans">
-  <div class="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-    <!-- Logo -->
-    <div class="text-center mb-4">
-      <img src="logo.png" alt="Canteen Logo" class="mx-auto h-16 w-auto" onerror="this.style.display='none'">
+  
+  <!-- Pre-loader Screen -->
+  <div id="preloader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+    <div class="text-center">
+      <img src="logo.png" alt="Canteen Logo" class="mx-auto h-20 w-auto mb-6" onerror="this.style.display='none'">
+      <h1 class="text-3xl font-bold text-gray-800 mb-4">Canteen Honesty System</h1>
+      
+      <!-- Loading animation -->
+      <div class="mb-4">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
+      </div>
+      
+      <!-- Progress bar -->
+      <div class="w-64 bg-gray-200 rounded-full h-3 mb-4">
+        <div id="progressBar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      
+      <p id="loadingText" class="text-gray-600 text-lg">Preparing system...</p>
     </div>
-    
-    <h1 class="text-2xl font-bold mb-2 text-center">Canteen Honesty System</h1>
-    <p class="mb-4 text-center text-gray-600">Please record what you've taken from the canteen. This system runs on trust and good faith.</p>
-    <form id="entryForm" class="space-y-4">
-      <div>
-        <label class="block font-medium mb-2">Items taken:</label>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-            <input type="checkbox" name="items" value="Sandwich" class="form-checkbox h-4 w-4" />
-            <span>Sandwich</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-            <input type="checkbox" name="items" value="Drink" class="form-checkbox h-4 w-4" />
-            <span>Drink</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-            <input type="checkbox" name="items" value="Chocolate Bar" class="form-checkbox h-4 w-4" />
-            <span>Chocolate Bar</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-            <input type="checkbox" name="items" value="Pastry" class="form-checkbox h-4 w-4" />
-            <span>Pastry</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-            <input type="checkbox" name="items" value="Wrap" class="form-checkbox h-4 w-4" />
-            <span>Wrap</span>
-          </label>
-          <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors">
-            <input type="checkbox" name="items" value="Protein Bar" class="form-checkbox h-4 w-4" />
-            <span>Protein Bar</span>
-          </label>
-        </div>
-        
-        <!-- Misc/Unlisted Items Section -->
-        <div class="mt-4 pt-4 border-t border-gray-200">
-          <label class="block font-medium mb-2">Other/Unlisted Items:</label>
-          <div class="space-y-2">
-            <div class="flex items-center space-x-2">
-              <input type="checkbox" id="miscCheckbox1" class="form-checkbox h-4 w-4" />
-              <label for="miscCheckbox1" class="cursor-pointer">Other item</label>
-            </div>
-            <div id="miscText1" class="ml-6 hidden">
-              <input type="text" id="miscInput1" placeholder="Describe the item..." maxlength="50" 
-                     class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-            </div>
-            
-            <div class="flex items-center space-x-2">
-              <input type="checkbox" id="miscCheckbox2" class="form-checkbox h-4 w-4" />
-              <label for="miscCheckbox2" class="cursor-pointer">Additional item</label>
-            </div>
-            <div id="miscText2" class="ml-6 hidden">
-              <input type="text" id="miscInput2" placeholder="Describe the item..." maxlength="50" 
-                     class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-            </div>
-            
-            <div class="flex items-center space-x-2">
-              <input type="checkbox" id="miscCheckbox3" class="form-checkbox h-4 w-4" />
-              <label for="miscCheckbox3" class="cursor-pointer">Additional item</label>
-            </div>
-            <div id="miscText3" class="ml-6 hidden">
-              <input type="text" id="miscInput3" placeholder="Describe the item..." maxlength="50" 
-                     class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent" class="hidden">
+    <div class="max-w-2xl mx-auto mt-8 p-8 bg-white rounded-lg shadow-md">
+      <!-- Logo -->
+      <div class="text-center mb-6">
+        <img src="logo.png" alt="Canteen Logo" class="mx-auto h-20 w-auto" onerror="this.style.display='none'">
+      </div>
+      
+      <h1 class="text-4xl font-bold mb-4 text-center">Canteen Honesty System</h1>
+      <p class="mb-6 text-center text-gray-600 text-lg">Please record what you've taken from the canteen. This system runs on trust and good faith.</p>
+      
+      <form id="entryForm" class="space-y-6">
+        <div>
+          <label class="block font-medium mb-4 text-xl">Items taken:</label>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-4 rounded-lg transition-colors border-2 border-transparent hover:border-gray-200">
+              <input type="checkbox" name="items" value="Sandwich" class="form-checkbox h-6 w-6" />
+              <span class="text-lg">Sandwich</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-4 rounded-lg transition-colors border-2 border-transparent hover:border-gray-200">
+              <input type="checkbox" name="items" value="Drink" class="form-checkbox h-6 w-6" />
+              <span class="text-lg">Drink</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-4 rounded-lg transition-colors border-2 border-transparent hover:border-gray-200">
+              <input type="checkbox" name="items" value="Chocolate Bar" class="form-checkbox h-6 w-6" />
+              <span class="text-lg">Chocolate Bar</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-4 rounded-lg transition-colors border-2 border-transparent hover:border-gray-200">
+              <input type="checkbox" name="items" value="Pastry" class="form-checkbox h-6 w-6" />
+              <span class="text-lg">Pastry</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-4 rounded-lg transition-colors border-2 border-transparent hover:border-gray-200">
+              <input type="checkbox" name="items" value="Wrap" class="form-checkbox h-6 w-6" />
+              <span class="text-lg">Wrap</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-4 rounded-lg transition-colors border-2 border-transparent hover:border-gray-200">
+              <input type="checkbox" name="items" value="Protein Bar" class="form-checkbox h-6 w-6" />
+              <span class="text-lg">Protein Bar</span>
+            </label>
+          </div>
+          
+          <!-- Misc/Unlisted Items Section -->
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <label class="block font-medium mb-4 text-xl">Other/Unlisted Items:</label>
+            <div class="space-y-4">
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" id="miscCheckbox1" class="form-checkbox h-6 w-6" />
+                <label for="miscCheckbox1" class="cursor-pointer text-lg">Other item</label>
+              </div>
+              <div id="miscText1" class="ml-9 hidden">
+                <input type="text" id="miscInput1" placeholder="Describe the item..." maxlength="50" 
+                       class="w-full p-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" id="miscCheckbox2" class="form-checkbox h-6 w-6" />
+                <label for="miscCheckbox2" class="cursor-pointer text-lg">Additional item</label>
+              </div>
+              <div id="miscText2" class="ml-9 hidden">
+                <input type="text" id="miscInput2" placeholder="Describe the item..." maxlength="50" 
+                       class="w-full p-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              
+              <div class="flex items-center space-x-3">
+                <input type="checkbox" id="miscCheckbox3" class="form-checkbox h-6 w-6" />
+                <label for="miscCheckbox3" class="cursor-pointer text-lg">Additional item</label>
+              </div>
+              <div id="miscText3" class="ml-9 hidden">
+                <input type="text" id="miscInput3" placeholder="Describe the item..." maxlength="50" 
+                       class="w-full p-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
             </div>
           </div>
         </div>
+        
+        <div>
+          <label for="name" class="block font-medium mb-2 text-xl">Your name:</label>
+          <input id="name" name="name" type="text" maxlength="80" 
+                 class="w-full p-4 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                 placeholder="Your name" />
+        </div>
+        
+        <button type="submit" id="submitBtn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 transition-all duration-150 text-xl">
+          <span id="submitText">Log My Items</span>
+          <span id="loadingText" class="hidden">Logging...</span>
+        </button>
+      </form>
+      
+      <div id="message" class="mt-6 text-center text-lg"></div>
+      
+      <!-- Network status indicator -->
+      <div id="networkStatus" class="fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium hidden">
+        <span id="networkIcon"></span>
+        <span id="networkText"></span>
       </div>
-      <div>
-        <label for="name" class="block font-medium mb-1">Your name:</label>
-        <input id="name" name="name" type="text" maxlength="80" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your name" />
-      </div>
-      <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 transition-all duration-150">
-        <span id="submitText">Log My Items</span>
-        <span id="loadingText" class="hidden">Logging...</span>
-      </button>
-    </form>
-    <div id="message" class="mt-4 text-center text-sm"></div>
+    </div>
   </div>
+
   <script>
-    // Set your deployed Apps Script URL here. Keeping it in a single place
-    // makes it easier to adjust between environments without editing logic.
+    // Set your deployed Apps Script URL here
     const API_URL = 'https://script.google.com/macros/s/AKfycbzlgPZ3ZsUW47s5jEticqAw75X09JdqVz45uzvd07WQJom4ZxbQSHc7nXMS3AYfHWTsrg/exec';
 
+    // Pre-loader management
+    const preloader = document.getElementById('preloader');
+    const mainContent = document.getElementById('mainContent');
+    const progressBar = document.getElementById('progressBar');
+    const loadingText = document.getElementById('loadingText');
+
+    // Simulate loading progress for slow tablets
+    function simulateLoading() {
+      const steps = [
+        { progress: 20, text: 'Loading system...' },
+        { progress: 40, text: 'Connecting to server...' },
+        { progress: 60, text: 'Checking network...' },
+        { progress: 80, text: 'Preparing interface...' },
+        { progress: 100, text: 'Ready!' }
+      ];
+
+      let currentStep = 0;
+      
+      function nextStep() {
+        if (currentStep < steps.length) {
+          const step = steps[currentStep];
+          progressBar.style.width = step.progress + '%';
+          loadingText.textContent = step.text;
+          currentStep++;
+          
+          // Variable timing - faster at the end
+          const delay = currentStep < 3 ? 800 : 400;
+          setTimeout(nextStep, delay);
+        } else {
+          // Hide preloader and show main content
+          setTimeout(() => {
+            preloader.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            
+            // Auto-focus name field for immediate use
+            document.getElementById('name').focus();
+          }, 500);
+        }
+      }
+      
+      // Start after a brief delay
+      setTimeout(nextStep, 300);
+    }
+
+    // Network status monitoring
+    function updateNetworkStatus() {
+      const networkStatus = document.getElementById('networkStatus');
+      const networkIcon = document.getElementById('networkIcon');
+      const networkText = document.getElementById('networkText');
+      
+      if (navigator.onLine) {
+        networkStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800';
+        networkIcon.textContent = '🟢';
+        networkText.textContent = 'Online';
+        
+        // Hide after 3 seconds if online
+        setTimeout(() => {
+          networkStatus.classList.add('hidden');
+        }, 3000);
+      } else {
+        networkStatus.className = 'fixed top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+        networkIcon.textContent = '🔴';
+        networkText.textContent = 'Offline';
+        networkStatus.classList.remove('hidden');
+      }
+    }
+
+    // Start loading sequence
+    window.addEventListener('load', () => {
+      simulateLoading();
+      updateNetworkStatus();
+    });
+
+    // Monitor network changes
+    window.addEventListener('online', () => {
+      updateNetworkStatus();
+      networkStatus.classList.remove('hidden');
+    });
+    
+    window.addEventListener('offline', () => {
+      updateNetworkStatus();
+    });
+
+    // Main form logic
     const form = document.getElementById('entryForm');
     const message = document.getElementById('message');
     const submitBtn = document.getElementById('submitBtn');
     const submitText = document.getElementById('submitText');
-    const loadingText = document.getElementById('loadingText');
+    const formLoadingText = document.getElementById('loadingText');
 
-    // Add visual feedback for checkbox selection
+    // Add visual feedback for checkbox selection with larger touch targets
     const checkboxes = document.querySelectorAll('input[name="items"]');
     
     checkboxes.forEach(checkbox => {
       checkbox.addEventListener('change', function() {
         const label = this.closest('label');
         if (this.checked) {
-          label.classList.add('bg-blue-50', 'border-blue-200', 'border');
-          label.classList.remove('hover:bg-gray-50');
+          label.classList.add('bg-blue-50', 'border-blue-500');
+          label.classList.remove('hover:bg-gray-50', 'border-transparent');
         } else {
-          label.classList.remove('bg-blue-50', 'border-blue-200', 'border');
-          label.classList.add('hover:bg-gray-50');
+          label.classList.remove('bg-blue-50', 'border-blue-500');
+          label.classList.add('hover:bg-gray-50', 'border-transparent');
         }
       });
     });
@@ -127,11 +248,11 @@
         if (this.checked) {
           textDiv.classList.remove('hidden');
           textInput.focus();
-          this.parentElement.classList.add('bg-blue-50', 'border-blue-200', 'border', 'rounded', 'p-2');
+          this.parentElement.classList.add('bg-blue-50', 'border-blue-200', 'border-2', 'rounded-lg', 'p-3');
         } else {
           textDiv.classList.add('hidden');
           textInput.value = '';
-          this.parentElement.classList.remove('bg-blue-50', 'border-blue-200', 'border', 'rounded', 'p-2');
+          this.parentElement.classList.remove('bg-blue-50', 'border-blue-200', 'border-2', 'rounded-lg', 'p-3');
         }
       });
     }
@@ -161,7 +282,7 @@
       const params = new URLSearchParams();
       params.append('action', 'log');
       params.append('name', name);
-      params.append('items', selected.join(', ')); // Send as comma-separated string
+      params.append('items', selected.join(', '));
       
       try {
         const res = await fetch(API_URL, {
@@ -174,12 +295,14 @@
         if (result.ok) {
           showMessage(`✅ Logged ${selected.length} item(s)! Thank you.`, 'success');
           form.reset();
+          
           // Reset checkbox styling
           checkboxes.forEach(checkbox => {
             const label = checkbox.closest('label');
-            label.classList.remove('bg-blue-50', 'border-blue-200', 'border');
-            label.classList.add('hover:bg-gray-50');
+            label.classList.remove('bg-blue-50', 'border-blue-500');
+            label.classList.add('hover:bg-gray-50', 'border-transparent');
           });
+          
           // Reset misc sections
           for (let i = 1; i <= 3; i++) {
             const checkbox = document.getElementById(`miscCheckbox${i}`);
@@ -188,13 +311,21 @@
             checkbox.checked = false;
             textDiv.classList.add('hidden');
             textInput.value = '';
-            checkbox.parentElement.classList.remove('bg-blue-50', 'border-blue-200', 'border', 'rounded', 'p-2');
+            checkbox.parentElement.classList.remove('bg-blue-50', 'border-blue-200', 'border-2', 'rounded-lg', 'p-3');
           }
+          
+          // Auto-focus name field for next user
+          setTimeout(() => {
+            document.getElementById('name').focus();
+          }, 2000);
+          
         } else {
           showMessage(result.message || 'An error occurred.', 'error');
         }
       } catch (err) {
-        showMessage('Network error. Please try again.', 'error');
+        // Show network status if offline
+        updateNetworkStatus();
+        showMessage('Network error. Please check connection and try again.', 'error');
       } finally {
         setLoading(false);
       }
@@ -204,21 +335,21 @@
       submitBtn.disabled = loading;
       if (loading) {
         submitText.classList.add('hidden');
-        loadingText.classList.remove('hidden');
+        formLoadingText.classList.remove('hidden');
       } else {
         submitText.classList.remove('hidden');
-        loadingText.classList.add('hidden');
+        formLoadingText.classList.add('hidden');
       }
     }
 
     function showMessage(text, type = 'info') {
       message.textContent = text;
-      message.className = 'mt-4 text-center text-sm ';
+      message.className = 'mt-6 text-center text-lg ';
       
       if (type === 'success') {
-        message.className += 'text-green-600 bg-green-50 p-2 rounded border border-green-200';
+        message.className += 'text-green-600 bg-green-50 p-4 rounded-lg border border-green-200';
       } else if (type === 'error') {
-        message.className += 'text-red-600 bg-red-50 p-2 rounded border border-red-200';
+        message.className += 'text-red-600 bg-red-50 p-4 rounded-lg border border-red-200';
       } else {
         message.className += 'text-blue-600';
       }
@@ -226,9 +357,14 @@
       // Clear message after delay
       setTimeout(() => { 
         message.textContent = '';
-        message.className = 'mt-4 text-center text-sm';
-      }, 4000);
+        message.className = 'mt-6 text-center text-lg';
+      }, type === 'error' ? 8000 : 5000); // Show errors longer
     }
+
+    // Auto-refresh page every 4 hours to prevent stale state
+    setTimeout(() => {
+      window.location.reload();
+    }, 4 * 60 * 60 * 1000);
   </script>
 </body>
 </html>

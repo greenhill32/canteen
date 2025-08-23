@@ -34,14 +34,8 @@
             <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">View:</label>
             <select id="statusFilter" class="p-2 border border-gray-300 rounded-md">
               <option value="outstanding">Outstanding</option>
-              <option value="archive">Archive (Paid + Deleted)</option>
               <option value="all">All Records</option>
             </select>
-          </div>
-          <div>
-            <button id="reloadBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-              🔄 Reload
-            </button>
           </div>
         </div>
       </div>
@@ -86,7 +80,7 @@
           🗑️ Delete
         </button>
         <button id="bulkRestore" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-          🔁 Restore
+          🔄 Restore
         </button>
         <button id="clearSelection" class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700">
           Clear Selection
@@ -107,7 +101,10 @@
               <input type="checkbox" id="selectAll" class="form-checkbox h-4 w-4">
             </th>
             <th class="px-2 py-2 cursor-pointer hover:bg-gray-300" data-sort="timestamp">
-              Time ↕️
+              Date ↕️
+            </th>
+            <th class="px-2 py-2 cursor-pointer hover:bg-gray-300" data-sort="days_old">
+              Days Old ↕️
             </th>
             <th class="px-2 py-2 cursor-pointer hover:bg-gray-300" data-sort="name">
               Name ↕️
@@ -158,6 +155,7 @@
     let filteredRecords = [];
     let sortField = 'timestamp';
     let sortDirection = 'desc';
+    let lastUpdated = null;
 
     // Initialize date filters to current week
     function initializeDateFilters() {
@@ -186,6 +184,7 @@
         }
         
         allRecords = data.data.items || [];
+        lastUpdated = new Date();
         applyFiltersAndSort();
         showMessage('', '');
         
@@ -230,6 +229,11 @@
         if (sortField === 'timestamp') {
           aVal = new Date(aVal).getTime();
           bVal = new Date(bVal).getTime();
+        } else if (sortField === 'days_old') {
+          // Sort by days old (calculated field)
+          const now = new Date();
+          aVal = Math.floor((now - new Date(a.timestamp)) / (1000 * 60 * 60 * 24));
+          bVal = Math.floor((now - new Date(b.timestamp)) / (1000 * 60 * 60 * 24));
         } else if (typeof aVal === 'string') {
           aVal = aVal.toLowerCase();
           bVal = bVal.toLowerCase();
@@ -249,8 +253,28 @@
       
       filteredRecords.forEach(rec => {
         const tr = document.createElement('tr');
-        tr.className = 'border-b hover:bg-gray-50';
         tr.dataset.id = rec.id;
+        
+        // Calculate days since entry
+        const entryDate = new Date(rec.timestamp);
+        const now = new Date();
+        const daysDiff = Math.floor((now - entryDate) / (1000 * 60 * 60 * 24));
+        
+        // Determine row highlighting based on age and status
+        let rowClass = 'border-b hover:bg-gray-50';
+        let daysClass = 'text-gray-600';
+        
+        if (rec.status === 'outstanding') {
+          if (daysDiff > 14) {
+            rowClass += ' bg-red-50 border-red-200';
+            daysClass = 'text-red-700 font-bold';
+          } else if (daysDiff > 7) {
+            rowClass += ' bg-orange-50 border-orange-200';
+            daysClass = 'text-orange-700 font-semibold';
+          }
+        }
+        
+        tr.className = rowClass;
         
         const statusClass = {
           'outstanding': 'text-orange-600 bg-orange-100',
@@ -262,8 +286,11 @@
           <td class="px-2 py-2">
             <input type="checkbox" class="record-checkbox form-checkbox h-4 w-4" data-id="${rec.id}">
           </td>
-          <td class="px-2 py-2 whitespace-nowrap text-xs">
-            ${escapeHtml(new Date(rec.timestamp).toLocaleString())}
+          <td class="px-2 py-2 whitespace-nowrap text-sm">
+            ${entryDate.toLocaleDateString('en-GB')}
+          </td>
+          <td class="px-2 py-2 whitespace-nowrap text-sm ${daysClass}">
+            ${daysDiff === 0 ? '0 days' : daysDiff === 1 ? '1 day' : `${daysDiff} days`}
           </td>
           <td class="px-2 py-2 font-medium">${escapeHtml(rec.name)}</td>
           <td class="px-2 py-2">${escapeHtml(rec.items)}</td>
@@ -294,7 +321,7 @@
       } else if (rec.status === 'deleted') {
         return `
           <button class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-xs" 
-                  data-action="restore" data-id="${rec.id}">🔁 Restore</button>
+                  data-action="restore" data-id="${rec.id}">🔄 Restore</button>
         `;
       } else {
         return '<span class="text-gray-400 text-xs">—</span>';
@@ -308,6 +335,10 @@
       const deleted = filteredRecords.filter(r => r.status === 'deleted').length;
       const totalItems = filteredRecords.reduce((sum, r) => sum + (r.item_count || 0), 0);
       
+      const lastUpdatedText = lastUpdated 
+        ? `<div class="text-xs text-gray-500 mt-2">Last updated: ${lastUpdated.toLocaleTimeString()}</div>`
+        : '';
+      
       summary.innerHTML = `
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
           <div><span class="font-semibold text-blue-600">${total}</span><br><span class="text-xs">Total Records</span></div>
@@ -316,6 +347,7 @@
           <div><span class="font-semibold text-red-600">${deleted}</span><br><span class="text-xs">Deleted</span></div>
           <div><span class="font-semibold text-purple-600">${totalItems}</span><br><span class="text-xs">Total Items</span></div>
         </div>
+        ${lastUpdatedText}
       `;
     }
 
@@ -338,7 +370,54 @@
     function updateExportLink() {
       const mode = statusFilter.value;
       const statusParam = mode === 'archive' ? 'archive' : mode;
+      
+      // For now, keep the simple export link - the backend would need to be updated 
+      // to include days_old calculation. Alternative: generate CSV client-side
       exportBtn.href = `${API_URL}?action=export&status=${encodeURIComponent(statusParam)}`;
+      
+      // Alternative: Client-side CSV generation with days_old included
+      exportBtn.onclick = function(e) {
+        e.preventDefault();
+        generateClientCSV();
+      };
+    }
+    
+    function generateClientCSV() {
+      // Use the current filtered records to generate CSV with days_old
+      const headers = ['Date', 'Days Old', 'Name', 'Items', 'Count', 'Status'];
+      const csvData = [headers];
+      
+      filteredRecords.forEach(rec => {
+        const entryDate = new Date(rec.timestamp);
+        const now = new Date();
+        const daysDiff = Math.floor((now - entryDate) / (1000 * 60 * 60 * 24));
+        const daysOldText = daysDiff === 0 ? '0 days' : daysDiff === 1 ? '1 day' : `${daysDiff} days`;
+        
+        csvData.push([
+          entryDate.toLocaleDateString('en-GB'),
+          daysOldText,
+          rec.name,
+          rec.items,
+          rec.item_count,
+          rec.status
+        ]);
+      });
+      
+      // Convert to CSV string
+      const csvString = csvData.map(row => 
+        row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+      ).join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `canteen-${statusFilter.value}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
 
     function showLoading(show) {
@@ -459,12 +538,11 @@
       doc.save(filename);
     }
 
-    // Event Listeners
-    statusFilter.addEventListener('change', applyFiltersAndSort);
-    searchBox.addEventListener('input', applyFiltersAndSort);
+    // Event Listeners - Status filter triggers reload, others are in-memory
+    statusFilter.addEventListener('change', loadRecords);  // Auto-reload on filter change
+    searchBox.addEventListener('input', applyFiltersAndSort);  // Instant search
     dateFrom.addEventListener('change', applyFiltersAndSort);
     dateTo.addEventListener('change', applyFiltersAndSort);
-    reloadBtn.addEventListener('click', loadRecords);
 
     // Sorting
     document.querySelectorAll('[data-sort]').forEach(header => {
@@ -558,7 +636,8 @@
       const newStatus = actionMap[action];
       if (!newStatus) return;
       
-      showLoading(true);
+      // Show brief loading only for the action, not the whole interface
+      showMessage('Processing...', 'info');
       
       try {
         const promises = ids.map(id => {
@@ -582,23 +661,22 @@
         
         if (failures.length === 0) {
           showMessage(`Successfully updated ${ids.length} record(s)`, 'success');
-          loadRecords();
+          // Auto-reload after successful action to keep data fresh
+          await loadRecords();
           document.getElementById('clearSelection').click();
         } else {
           showMessage(`Updated ${ids.length - failures.length} records, ${failures.length} failed`, 'error');
-          loadRecords();
+          await loadRecords();
         }
         
       } catch (err) {
-        showMessage('Network error during bulk operation', 'error');
-      } finally {
-        showLoading(false);
+        showMessage('Network error during operation', 'error');
       }
     }
 
     // Initialize
     initializeDateFilters();
-    loadRecords();
+    loadRecords();  // Initial load only
   </script>
 </body>
 </html>
