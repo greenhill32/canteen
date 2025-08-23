@@ -1,496 +1,604 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin - Canteen Honesty System</title>
-  <style>
-    *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f5f5f5;margin:0;padding:24px}
-    .container{max-width:1100px;margin:0 auto}
-    .card{background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px;margin-bottom:20px}
-    .flex{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    h1{margin:0 0 6px 0}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-    .stat{padding:18px;border-radius:12px;background:#fafafa;border:1px solid #eee;text-align:center}
-    .stat b{display:block;font-size:28px;margin-bottom:4px}
-    .row{overflow:auto}
-    table{width:100%;border-collapse:collapse;margin-top:8px}
-    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
-    th{position:sticky;top:0;background:#fafafa;font-weight:600}
-    .badge{display:inline-block;background:#eef0f3;border:1px solid #e2e6ea;border-radius:999px;padding:2px 8px;margin:2px 6px 2px 0;font-size:.85em}
-    .btn{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .b1{background:#222;color:#fff}.b2{background:#6c757d;color:#fff}.b3{background:#28a745;color:#fff}.b4{background:#dc3545;color:#fff}
-    .input{padding:10px 12px;border:2px solid #e5e7eb;border-radius:10px}
-    .auth{max-width:380px;margin:12vh auto}
-    .msg{padding:12px;border-radius:10px;margin:10px 0}
-    .ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
-    .err{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
-    .muted{color:#666}
-    .debug{background:#f8f9fa;border:1px solid #dee2e6;border-radius:10px;padding:12px;margin:10px 0;font-family:monospace;font-size:12px;max-height:200px;overflow:auto}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canteen Honesty Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
-<div class="container">
-
-  <!-- AUTH -->
-  <div id="auth" class="card auth">
-    <h2>Admin Access</h2>
-    <p class="muted">Enter the admin password.</p>
-    <input id="pw" type="password" class="input" placeholder="Admin password" style="width:100%;margin:10px 0 12px">
-    <button class="btn b1" style="width:100%" onclick="auth()">Continue</button>
-    <div id="authErr" class="msg err" style="display:none"></div>
-    
-    <!-- Debug Panel -->
-    <div style="margin-top:20px">
-      <button class="btn b2" onclick="testConnection()" style="width:100%">Test Connection</button>
-      <div id="debugOutput" class="debug" style="display:none"></div>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-6xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+    <!-- Header with Logo -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center space-x-4">
+        <img src="logo.png" alt="Canteen Logo" class="h-12 w-auto" onerror="this.style.display='none'">
+        <h1 class="text-3xl font-bold">Canteen Honesty Admin</h1>
+      </div>
     </div>
-  </div>
 
-  <!-- DASH -->
-  <div id="dash" style="display:none">
-    <div class="card">
-      <div class="flex" style="justify-content:space-between">
+    <!-- Advanced Controls -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <!-- Left Controls -->
+      <div class="space-y-4">
+        <!-- Search Box -->
         <div>
-          <h1>Admin Dashboard</h1>
-          <div class="muted">Canteen Honesty System – Outstanding Items</div>
+          <label for="searchBox" class="block text-sm font-medium text-gray-700 mb-1">Search by name:</label>
+          <input type="text" id="searchBox" placeholder="Type to search names..." 
+                 class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
         </div>
-        <div class="flex">
-          <button class="btn b2" onclick="testConnection()">Test Connection</button>
-          <button class="btn b2" onclick="logout()">Logout</button>
-        </div>
-      </div>
-      <div class="grid" style="margin-top:14px">
-        <div class="stat"><b id="s_total">-</b>Total Entries</div>
-        <div class="stat"><b id="s_items">-</b>Outstanding Items</div>
-        <div class="stat"><b id="s_users">-</b>Unique Users</div>
-        <div class="stat"><b id="s_today">-</b>Today's Entries</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="flex" style="justify-content:space-between;margin-bottom:10px">
-        <h3 style="margin:0">Outstanding Items</h3>
-        <div class="flex">
-          <button id="btnRefresh" class="btn b2" onclick="refresh()">Refresh</button>
-          <button id="btnExport" class="btn b1" onclick="exportSelected()" disabled>Export selected</button>
-          <button id="btnPaid" class="btn b3" onclick="markPaid()" disabled>Mark paid</button>
-          <button id="btnDelete" class="btn b4" onclick="deleteSelected()" disabled>Delete</button>
+        
+        <!-- Status Filter -->
+        <div class="flex items-center space-x-4">
+          <div>
+            <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">View:</label>
+            <select id="statusFilter" class="p-2 border border-gray-300 rounded-md">
+              <option value="outstanding">Outstanding</option>
+              <option value="archive">Archive (Paid + Deleted)</option>
+              <option value="all">All Records</option>
+            </select>
+          </div>
+          <div>
+            <button id="reloadBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+              🔄 Reload
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="flex" style="margin-bottom:10px">
-        <input id="f_name" class="input" placeholder="Filter by name">
-        <input id="f_date" class="input" type="date">
-        <select id="f_item" class="input">
-          <option value="">All items</option>
-          <option value="sandwich">Sandwich</option>
-          <option value="drink">Drink</option>
-          <option value="chocolate">Chocolate Bar</option>
-          <option value="pastry">Pastry</option>
-        </select>
-        <button class="btn b2" onclick="clearFilters()">Clear</button>
-      </div>
-
-      <div id="msg"></div>
-
-      <div id="loading" class="muted">Loading data...</div>
-
-      <div id="data" style="display:none">
-        <label><input id="chkAll" type="checkbox" onclick="toggleAll()"> Select all visible</label>
-        <div class="row">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:60px">Select</th>
-                <th>Date & Time</th>
-                <th>Name</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
+      <!-- Right Controls -->
+      <div class="space-y-4">
+        <!-- Date Range Filter -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label for="dateFrom" class="block text-sm font-medium text-gray-700 mb-1">From:</label>
+            <input type="date" id="dateFrom" class="w-full p-2 border border-gray-300 rounded-md">
+          </div>
+          <div>
+            <label for="dateTo" class="block text-sm font-medium text-gray-700 mb-1">To:</label>
+            <input type="date" id="dateTo" class="w-full p-2 border border-gray-300 rounded-md">
+          </div>
+        </div>
+        
+        <!-- Export Controls -->
+        <div class="flex flex-wrap gap-2">
+          <a id="exportBtn" class="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors text-sm" href="#">
+            📊 Export CSV
+          </a>
+          <button id="pdfWeeklyBtn" class="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm">
+            📄 Weekly PDF
+          </button>
+          <button id="pdfMonthlyBtn" class="bg-indigo-600 text-white px-3 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm">
+            📅 Monthly PDF
+          </button>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<script>
-// ===== CONFIG =====
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzek8ORbrHqFPGz7VLPVHaVhr8HpwYZF-GIRb25BA2yY7fACwa-qk_NUHKpnpIb4cTh4w/exec";
-const SECRET_KEY = "jhgghfaj;uryworu3qeghfrrfewfqf";
-const ADMIN_PASSWORD = "admin123"; // client-side convenience only
+    <!-- Bulk Actions -->
+    <div id="bulkActions" class="mb-4 p-3 bg-gray-50 rounded-md hidden">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium">Bulk Actions:</span>
+        <button id="bulkMarkPaid" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+          ✅ Mark Paid
+        </button>
+        <button id="bulkDelete" class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+          🗑️ Delete
+        </button>
+        <button id="bulkRestore" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+          🔁 Restore
+        </button>
+        <button id="clearSelection" class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700">
+          Clear Selection
+        </button>
+        <span id="selectedCount" class="text-sm text-gray-600 ml-2"></span>
+      </div>
+    </div>
 
-// ===== STATE =====
-let allData = [];
-let filtered = [];
-let selected = new Set();
+    <!-- Summary -->
+    <div id="summary" class="mb-4 p-3 bg-blue-50 rounded-md border border-blue-200"></div>
 
-// ===== DEBUG =====
-function debug(message) {
-  console.log('DEBUG:', message);
-  const debugEl = document.getElementById('debugOutput');
-  if (debugEl) {
-    debugEl.style.display = 'block';
-    debugEl.innerHTML += new Date().toLocaleTimeString() + ': ' + escapeHtml(String(message)) + '\n';
-    debugEl.scrollTop = debugEl.scrollHeight;
-  }
-}
-
-function testConnection() {
-  debug('Testing connection to Google Apps Script...');
-  debug('URL: ' + GOOGLE_SCRIPT_URL);
-  debug('Secret Key: ' + SECRET_KEY);
-  
-  loadJSONP().then(() => {
-    debug('✓ Connection successful!');
-    debug('Data loaded: ' + allData.length + ' entries');
-  }).catch(error => {
-    debug('✗ Connection failed: ' + error.message);
-    debug('Common issues:');
-    debug('1. Apps Script not deployed as web app');
-    debug('2. Wrong permissions (should be "Anyone" access)');
-    debug('3. Script not published or URL expired');
-    debug('4. Sheet ID not set correctly in server code');
-  });
-}
-
-// ===== AUTH =====
-function auth(){
-  const val = document.getElementById("pw").value;
-  const err = document.getElementById("authErr");
-  err.style.display = "none";
-  if(val === ADMIN_PASSWORD){
-    document.getElementById("auth").style.display = "none";
-    document.getElementById("dash").style.display = "block";
-    load();
-  }else{
-    err.textContent = "Invalid password. Try again.";
-    err.style.display = "block";
-  }
-}
-
-function logout(){
-  document.getElementById("dash").style.display = "none";
-  document.getElementById("auth").style.display = "block";
-  document.getElementById("pw").value = "";
-  document.getElementById("authErr").style.display = "none";
-}
-
-// ===== LOAD (JSONP) =====
-async function load(){
-  showLoading(true);
-  try{
-    await loadJSONP();
-    processAndRender();
-    showMsg('Data loaded successfully: ' + allData.length + ' entries', false);
-  }catch(e){
-    console.error('Load error:', e);
-    showMsg("Failed to load data: " + e.message, true);
-    debug('Load error: ' + e.message);
-  }finally{
-    showLoading(false);
-  }
-}
-
-function loadJSONP(){
-  return new Promise((resolve, reject)=>{
-    const cb = "cb_" + Date.now() + "_" + Math.floor(Math.random()*1e6);
-    const cleanup = () => {
-      delete window[cb];
-      if(script.parentNode) script.parentNode.removeChild(script);
-      clearTimeout(timer);
-    };
+    <!-- Table -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm" id="recordsTable">
+        <thead>
+          <tr class="bg-gray-200 text-left">
+            <th class="px-2 py-2">
+              <input type="checkbox" id="selectAll" class="form-checkbox h-4 w-4">
+            </th>
+            <th class="px-2 py-2 cursor-pointer hover:bg-gray-300" data-sort="timestamp">
+              Time ↕️
+            </th>
+            <th class="px-2 py-2 cursor-pointer hover:bg-gray-300" data-sort="name">
+              Name ↕️
+            </th>
+            <th class="px-2 py-2">Items</th>
+            <th class="px-2 py-2 text-center">Count</th>
+            <th class="px-2 py-2 cursor-pointer hover:bg-gray-300" data-sort="status">
+              Status ↕️
+            </th>
+            <th class="px-2 py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
     
-    window[cb] = (payload)=>{
-      debug('JSONP Response received');
-      debug('Response: ' + JSON.stringify(payload, null, 2));
+    <!-- Loading and Messages -->
+    <div id="loadingSpinner" class="text-center py-8 hidden">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Loading...</p>
+    </div>
+    <div id="adminMessage" class="mt-4 text-center text-sm"></div>
+  </div>
+
+  <script>
+    // Configure your API endpoint here
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzlgPZ3ZsUW47s5jEticqAw75X09JdqVz45uzvd07WQJom4ZxbQSHc7nXMS3AYfHWTsrg/exec';
+    
+    // DOM Elements
+    const statusFilter = document.getElementById('statusFilter');
+    const searchBox = document.getElementById('searchBox');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    const reloadBtn = document.getElementById('reloadBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const pdfWeeklyBtn = document.getElementById('pdfWeeklyBtn');
+    const pdfMonthlyBtn = document.getElementById('pdfMonthlyBtn');
+    const tableBody = document.getElementById('tableBody');
+    const summary = document.getElementById('summary');
+    const adminMessage = document.getElementById('adminMessage');
+    const selectAll = document.getElementById('selectAll');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    // Global data storage
+    let allRecords = [];
+    let filteredRecords = [];
+    let sortField = 'timestamp';
+    let sortDirection = 'desc';
+
+    // Initialize date filters to current week
+    function initializeDateFilters() {
+      const today = new Date();
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      dateFrom.value = weekAgo.toISOString().split('T')[0];
+      dateTo.value = today.toISOString().split('T')[0];
+    }
+
+    async function loadRecords() {
+      showLoading(true);
+      const mode = statusFilter.value;
+      const statusParam = mode === 'archive' ? 'archive' : mode;
+      const params = new URLSearchParams();
+      params.append('action', 'list');
+      params.append('status', statusParam);
+      params.append('limit', '500');
       
-      try{
-        if(!payload || !payload.success){ 
-          const errorMsg = payload && payload.error ? payload.error : "Unknown error";
-          debug('Server error: ' + errorMsg);
-          throw new Error(errorMsg); 
+      try {
+        const res = await fetch(`${API_URL}?${params.toString()}`, { method: 'GET' });
+        const data = await res.json();
+        
+        if (!data.ok) {
+          showMessage(data.message || 'Failed to fetch records.', 'error');
+          return;
         }
         
-        let entries = payload.entries || [];
-        debug('Raw entries count: ' + entries.length);
+        allRecords = data.data.items || [];
+        applyFiltersAndSort();
+        showMessage('', '');
         
-        // Normalize
-        allData = entries.map((e, i)=>{
-          const ts = e.timestamp ? new Date(e.timestamp) : new Date();
-          return {
-            id: e.id || (i+1),
-            timestamp: ts.toISOString(),
-            displayTimestamp: formatDT(ts),
-            name: e.name || "",
-            items: Array.isArray(e.items) ? e.items : (e.items ? String(e.items).split(",").map(s=>s.trim()) : []),
-            itemCount: Number(e.itemCount || (Array.isArray(e.items) ? e.items.length : 0))
-          };
+      } catch (err) {
+        showMessage('Network error while loading records.', 'error');
+      } finally {
+        showLoading(false);
+      }
+      
+      updateExportLink();
+    }
+
+    function applyFiltersAndSort() {
+      let filtered = [...allRecords];
+      
+      // Apply search filter
+      const searchTerm = searchBox.value.toLowerCase().trim();
+      if (searchTerm) {
+        filtered = filtered.filter(rec => 
+          rec.name.toLowerCase().includes(searchTerm) ||
+          rec.items.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      // Apply date filter
+      const fromDate = dateFrom.value;
+      const toDate = dateTo.value;
+      if (fromDate || toDate) {
+        filtered = filtered.filter(rec => {
+          const recDate = new Date(rec.timestamp).toISOString().split('T')[0];
+          const afterFrom = !fromDate || recDate >= fromDate;
+          const beforeTo = !toDate || recDate <= toDate;
+          return afterFrom && beforeTo;
+        });
+      }
+      
+      // Apply sorting
+      filtered.sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+        
+        if (sortField === 'timestamp') {
+          aVal = new Date(aVal).getTime();
+          bVal = new Date(bVal).getTime();
+        } else if (typeof aVal === 'string') {
+          aVal = aVal.toLowerCase();
+          bVal = bVal.toLowerCase();
+        }
+        
+        const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+      
+      filteredRecords = filtered;
+      populateTable();
+      updateSummary();
+    }
+
+    function populateTable() {
+      tableBody.innerHTML = '';
+      
+      filteredRecords.forEach(rec => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50';
+        tr.dataset.id = rec.id;
+        
+        const statusClass = {
+          'outstanding': 'text-orange-600 bg-orange-100',
+          'paid': 'text-green-600 bg-green-100',
+          'deleted': 'text-red-600 bg-red-100'
+        }[rec.status] || 'text-gray-600';
+        
+        tr.innerHTML = `
+          <td class="px-2 py-2">
+            <input type="checkbox" class="record-checkbox form-checkbox h-4 w-4" data-id="${rec.id}">
+          </td>
+          <td class="px-2 py-2 whitespace-nowrap text-xs">
+            ${escapeHtml(new Date(rec.timestamp).toLocaleString())}
+          </td>
+          <td class="px-2 py-2 font-medium">${escapeHtml(rec.name)}</td>
+          <td class="px-2 py-2">${escapeHtml(rec.items)}</td>
+          <td class="px-2 py-2 text-center font-semibold">${rec.item_count}</td>
+          <td class="px-2 py-2">
+            <span class="px-2 py-1 rounded-full text-xs ${statusClass}">
+              ${escapeHtml(rec.status)}
+            </span>
+          </td>
+          <td class="px-2 py-2">
+            ${getActionButtons(rec)}
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+      
+      updateBulkActions();
+    }
+
+    function getActionButtons(rec) {
+      if (rec.status === 'outstanding') {
+        return `
+          <button class="text-green-600 hover:bg-green-50 px-2 py-1 rounded text-xs mr-1" 
+                  data-action="markPaid" data-id="${rec.id}">✅ Paid</button>
+          <button class="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-xs" 
+                  data-action="delete" data-id="${rec.id}">🗑️ Delete</button>
+        `;
+      } else if (rec.status === 'deleted') {
+        return `
+          <button class="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-xs" 
+                  data-action="restore" data-id="${rec.id}">🔁 Restore</button>
+        `;
+      } else {
+        return '<span class="text-gray-400 text-xs">—</span>';
+      }
+    }
+
+    function updateSummary() {
+      const total = filteredRecords.length;
+      const outstanding = filteredRecords.filter(r => r.status === 'outstanding').length;
+      const paid = filteredRecords.filter(r => r.status === 'paid').length;
+      const deleted = filteredRecords.filter(r => r.status === 'deleted').length;
+      const totalItems = filteredRecords.reduce((sum, r) => sum + (r.item_count || 0), 0);
+      
+      summary.innerHTML = `
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+          <div><span class="font-semibold text-blue-600">${total}</span><br><span class="text-xs">Total Records</span></div>
+          <div><span class="font-semibold text-orange-600">${outstanding}</span><br><span class="text-xs">Outstanding</span></div>
+          <div><span class="font-semibold text-green-600">${paid}</span><br><span class="text-xs">Paid</span></div>
+          <div><span class="font-semibold text-red-600">${deleted}</span><br><span class="text-xs">Deleted</span></div>
+          <div><span class="font-semibold text-purple-600">${totalItems}</span><br><span class="text-xs">Total Items</span></div>
+        </div>
+      `;
+    }
+
+    function updateBulkActions() {
+      const checkboxes = document.querySelectorAll('.record-checkbox');
+      const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
+      
+      if (selectedCheckboxes.length > 0) {
+        bulkActions.classList.remove('hidden');
+        selectedCount.textContent = `${selectedCheckboxes.length} selected`;
+      } else {
+        bulkActions.classList.add('hidden');
+      }
+      
+      // Update select all checkbox
+      selectAll.indeterminate = selectedCheckboxes.length > 0 && selectedCheckboxes.length < checkboxes.length;
+      selectAll.checked = checkboxes.length > 0 && selectedCheckboxes.length === checkboxes.length;
+    }
+
+    function updateExportLink() {
+      const mode = statusFilter.value;
+      const statusParam = mode === 'archive' ? 'archive' : mode;
+      exportBtn.href = `${API_URL}?action=export&status=${encodeURIComponent(statusParam)}`;
+    }
+
+    function showLoading(show) {
+      if (show) {
+        loadingSpinner.classList.remove('hidden');
+        tableBody.style.opacity = '0.5';
+      } else {
+        loadingSpinner.classList.add('hidden');
+        tableBody.style.opacity = '1';
+      }
+    }
+
+    function showMessage(text, type = 'info') {
+      if (!text) {
+        adminMessage.textContent = '';
+        adminMessage.className = 'mt-4 text-center text-sm';
+        return;
+      }
+      
+      adminMessage.textContent = text;
+      adminMessage.className = 'mt-4 text-center text-sm p-2 rounded ';
+      
+      if (type === 'error') {
+        adminMessage.className += 'bg-red-50 text-red-600 border border-red-200';
+      } else if (type === 'success') {
+        adminMessage.className += 'bg-green-50 text-green-600 border border-green-200';
+      } else {
+        adminMessage.className += 'bg-blue-50 text-blue-600 border border-blue-200';
+      }
+      
+      if (type === 'success') {
+        setTimeout(() => showMessage('', ''), 3000);
+      }
+    }
+
+    // Utility function
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;',
+      };
+      return String(text).replace(/[&<>\'\"]/g, (m) => map[m]);
+    }
+
+    // PDF Generation Functions
+    function generatePDF(period) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Calculate date range
+      const now = new Date();
+      let startDate, endDate;
+      
+      if (period === 'weekly') {
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        endDate = now;
+      } else {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      }
+      
+      // Filter records for the period
+      const periodRecords = allRecords.filter(rec => {
+        const recDate = new Date(rec.timestamp);
+        return recDate >= startDate && recDate <= endDate;
+      });
+      
+      // PDF Header
+      doc.setFontSize(20);
+      doc.text('Canteen Honesty System Report', 20, 20);
+      doc.setFontSize(12);
+      doc.text(`${period.charAt(0).toUpperCase() + period.slice(1)} Report`, 20, 30);
+      doc.text(`Period: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`, 20, 40);
+      
+      // Summary stats
+      const outstanding = periodRecords.filter(r => r.status === 'outstanding').length;
+      const paid = periodRecords.filter(r => r.status === 'paid').length;
+      const deleted = periodRecords.filter(r => r.status === 'deleted').length;
+      const totalItems = periodRecords.reduce((sum, r) => sum + (r.item_count || 0), 0);
+      
+      doc.text(`Total Records: ${periodRecords.length}`, 20, 55);
+      doc.text(`Outstanding: ${outstanding}`, 20, 65);
+      doc.text(`Paid: ${paid}`, 90, 65);
+      doc.text(`Deleted: ${deleted}`, 140, 65);
+      doc.text(`Total Items: ${totalItems}`, 20, 75);
+      
+      // Table header
+      let yPos = 90;
+      doc.setFontSize(10);
+      doc.text('Date', 20, yPos);
+      doc.text('Name', 50, yPos);
+      doc.text('Items', 100, yPos);
+      doc.text('Count', 150, yPos);
+      doc.text('Status', 170, yPos);
+      
+      yPos += 10;
+      
+      // Table data
+      periodRecords.slice(0, 40).forEach(rec => { // Limit to first 40 records
+        if (yPos > 270) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.text(new Date(rec.timestamp).toLocaleDateString(), 20, yPos);
+        doc.text(rec.name.substring(0, 15), 50, yPos);
+        doc.text(rec.items.substring(0, 20), 100, yPos);
+        doc.text(rec.item_count.toString(), 150, yPos);
+        doc.text(rec.status, 170, yPos);
+        yPos += 8;
+      });
+      
+      // Save PDF
+      const filename = `canteen-${period}-report-${now.toISOString().split('T')[0]}.pdf`;
+      doc.save(filename);
+    }
+
+    // Event Listeners
+    statusFilter.addEventListener('change', applyFiltersAndSort);
+    searchBox.addEventListener('input', applyFiltersAndSort);
+    dateFrom.addEventListener('change', applyFiltersAndSort);
+    dateTo.addEventListener('change', applyFiltersAndSort);
+    reloadBtn.addEventListener('click', loadRecords);
+
+    // Sorting
+    document.querySelectorAll('[data-sort]').forEach(header => {
+      header.addEventListener('click', () => {
+        const field = header.dataset.sort;
+        if (sortField === field) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortField = field;
+          sortDirection = 'asc';
+        }
+        applyFiltersAndSort();
+      });
+    });
+
+    // Select All checkbox
+    selectAll.addEventListener('change', function() {
+      const checkboxes = document.querySelectorAll('.record-checkbox');
+      checkboxes.forEach(cb => cb.checked = this.checked);
+      updateBulkActions();
+    });
+
+    // Individual checkboxes
+    tableBody.addEventListener('change', function(e) {
+      if (e.target.classList.contains('record-checkbox')) {
+        updateBulkActions();
+      }
+    });
+
+    // Individual row actions
+    tableBody.addEventListener('click', async (evt) => {
+      const target = evt.target;
+      if (!target.dataset || !target.dataset.action) return;
+      
+      const id = target.dataset.id;
+      const action = target.dataset.action;
+      
+      await performAction(action, [id]);
+    });
+
+    // Bulk actions
+    document.getElementById('bulkMarkPaid').addEventListener('click', async () => {
+      const selectedIds = getSelectedIds();
+      if (selectedIds.length === 0) return;
+      
+      if (confirm(`Mark ${selectedIds.length} records as paid?`)) {
+        await performAction('markPaid', selectedIds);
+      }
+    });
+
+    document.getElementById('bulkDelete').addEventListener('click', async () => {
+      const selectedIds = getSelectedIds();
+      if (selectedIds.length === 0) return;
+      
+      if (confirm(`Delete ${selectedIds.length} records?`)) {
+        await performAction('delete', selectedIds);
+      }
+    });
+
+    document.getElementById('bulkRestore').addEventListener('click', async () => {
+      const selectedIds = getSelectedIds();
+      if (selectedIds.length === 0) return;
+      
+      if (confirm(`Restore ${selectedIds.length} records?`)) {
+        await performAction('restore', selectedIds);
+      }
+    });
+
+    document.getElementById('clearSelection').addEventListener('click', () => {
+      document.querySelectorAll('.record-checkbox').forEach(cb => cb.checked = false);
+      selectAll.checked = false;
+      updateBulkActions();
+    });
+
+    // PDF generation
+    pdfWeeklyBtn.addEventListener('click', () => generatePDF('weekly'));
+    pdfMonthlyBtn.addEventListener('click', () => generatePDF('monthly'));
+
+    function getSelectedIds() {
+      return Array.from(document.querySelectorAll('.record-checkbox:checked'))
+        .map(cb => cb.dataset.id);
+    }
+
+    async function performAction(action, ids) {
+      const actionMap = {
+        'markPaid': 'paid',
+        'delete': 'deleted',
+        'restore': 'outstanding'
+      };
+      
+      const newStatus = actionMap[action];
+      if (!newStatus) return;
+      
+      showLoading(true);
+      
+      try {
+        const promises = ids.map(id => {
+          const params = new URLSearchParams();
+          params.append('action', 'update');
+          params.append('id', id);
+          params.append('new_status', newStatus);
+          params.append('status_by', 'Admin');
+          
+          return fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+          });
         });
         
-        debug('Normalized entries: ' + allData.length);
-        resolve();
-      }catch(err){ 
-        debug('Parse error: ' + err.message);
-        reject(err); 
+        const responses = await Promise.all(promises);
+        const results = await Promise.all(responses.map(r => r.json()));
+        
+        const failures = results.filter(r => !r.ok);
+        
+        if (failures.length === 0) {
+          showMessage(`Successfully updated ${ids.length} record(s)`, 'success');
+          loadRecords();
+          document.getElementById('clearSelection').click();
+        } else {
+          showMessage(`Updated ${ids.length - failures.length} records, ${failures.length} failed`, 'error');
+          loadRecords();
+        }
+        
+      } catch (err) {
+        showMessage('Network error during bulk operation', 'error');
+      } finally {
+        showLoading(false);
       }
-      finally{ cleanup(); }
-    };
-    
-    const script = document.createElement("script");
-    const url = `${GOOGLE_SCRIPT_URL}?action=getData&secret=${encodeURIComponent(SECRET_KEY)}&callback=${cb}`;
-    
-    debug('Making JSONP request to: ' + url);
-    script.src = url;
-    
-    script.onerror = ()=>{ 
-      debug('JSONP script failed to load - check URL and deployment');
-      cleanup(); 
-      reject(new Error("JSONP load failed - check Apps Script deployment")); 
-    };
-    
-    document.body.appendChild(script);
-    const timer = setTimeout(()=>{ 
-      debug('Request timeout after 15 seconds');
-      cleanup(); 
-      reject(new Error("Request timeout - server not responding")); 
-    }, 15000);
-  });
-}
+    }
 
-// ===== RENDER =====
-function processAndRender(){
-  applyFilters(); // sets filtered
-  updateStats();
-  renderTable();
-}
-
-function updateStats(){
-  const total = allData.length;
-  const items = allData.reduce((a,c)=>a + (c.itemCount||0), 0);
-  const users = new Set(allData.map(x=>x.name)).size;
-  const today = new Date().toDateString();
-  const todayCount = allData.filter(x=> new Date(x.timestamp).toDateString() === today ).length;
-  byId("s_total").textContent = total;
-  byId("s_items").textContent = items;
-  byId("s_users").textContent = users;
-  byId("s_today").textContent = todayCount;
-}
-
-function renderTable(){
-  const tb = byId("tbody");
-  if(filtered.length === 0){
-    tb.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;padding:28px">No entries found</td></tr>`;
-  }else{
-    tb.innerHTML = filtered.map(e=>`
-      <tr>
-        <td><input type="checkbox" data-id="${e.id}" onchange="toggleOne(${e.id}, this.checked)" ${selected.has(e.id)?'checked':''}></td>
-        <td>${e.displayTimestamp}</td>
-        <td><strong>${escapeHtml(e.name)}</strong></td>
-        <td>${e.items.map(it=>`<span class="badge">${escapeHtml(it)}</span>`).join("")}</td>
-        <td>${e.itemCount}</td>
-        <td>
-          <button class="btn b3" onclick="markOnePaid(${e.id})">Paid</button>
-          <button class="btn b4" onclick="deleteOne(${e.id})">Delete</button>
-        </td>
-      </tr>
-    `).join("");
-  }
-  updateActionButtons();
-  byId("data").style.display = "block";
-}
-
-function updateActionButtons(){
-  const hasAny = selected.size > 0;
-  byId("btnExport").disabled = !hasAny;
-  byId("btnPaid").disabled = !hasAny;
-  byId("btnDelete").disabled = !hasAny;
-}
-
-// ===== FILTERS =====
-function applyFilters(){
-  const n = byId("f_name").value.trim().toLowerCase();
-  const d = byId("f_date").value; // yyyy-mm-dd
-  const it = byId("f_item").value;
-  filtered = allData.filter(e=>{
-    const okN = !n || e.name.toLowerCase().includes(n);
-    const okD = !d || (e.timestamp || "").startsWith(d);
-    const okI = !it || (Array.isArray(e.items) && e.items.includes(it));
-    return okN && okD && okI;
-  });
-  // keep selected set only for visible rows
-  selected = new Set([...selected].filter(id=> filtered.some(x=>x.id===id)));
-}
-
-function clearFilters(){
-  byId("f_name").value = "";
-  byId("f_date").value = "";
-  byId("f_item").value = "";
-  applyFilters();
-  renderTable();
-}
-
-// ===== SELECTION =====
-function toggleOne(id, on){
-  if(on) selected.add(id); else selected.delete(id);
-  updateActionButtons();
-}
-
-function toggleAll(){
-  const on = byId("chkAll").checked;
-  selected.clear();
-  filtered.forEach(e=>{ if(on) selected.add(e.id); });
-  renderTable();
-}
-
-// ===== ACTIONS =====
-function refresh(){
-  const b = byId("btnRefresh");
-  b.disabled = true; b.textContent = "Refreshing...";
-  load().finally(()=>{ b.disabled = false; b.textContent = "Refresh"; });
-}
-
-function exportSelected(){
-  if(selected.size===0) return;
-  const sel = allData.filter(e=> selected.has(e.id));
-  const headers = ["Date & Time","Name","Items","Item Count"];
-  const rows = sel.map(e=>[e.displayTimestamp, e.name, e.items.join("; "), e.itemCount]);
-  const csv = [headers, ...rows].map(r=> r.map(x=> `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], {type:"text/csv"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "canteen-selected.csv";
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showMsg(`Exported ${sel.length} entries.`, false);
-}
-
-async function markPaid(){
-  if(selected.size===0) return;
-  const sel = allData.filter(e=> selected.has(e.id));
-  if(!confirm(`Mark ${sel.length} entr${sel.length>1?'ies':'y'} as PAID and remove?`)) return;
-  
-  try {
-    await postToScript("markPaid", { entries: sel, paidAt: new Date().toISOString(), paidBy: "admin" });
-    // remove locally
-    allData = allData.filter(e=> !selected.has(e.id));
-    selected.clear();
-    processAndRender();
-    showMsg("Marked as paid.", false);
-  } catch (error) {
-    showMsg("Failed to mark as paid: " + error.message, true);
-  }
-}
-
-async function markOnePaid(id){
-  const e = allData.find(x=>x.id===id);
-  if(!e) return;
-  if(!confirm(`Mark ${e.name} (${e.items.join(", ")}) as PAID?`)) return;
-  
-  try {
-    await postToScript("markPaid", { entries: [e], paidAt: new Date().toISOString(), paidBy: "admin" });
-    allData = allData.filter(x=>x.id!==id);
-    selected.delete(id);
-    processAndRender();
-    showMsg("Entry marked as paid.", false);
-  } catch (error) {
-    showMsg("Failed to mark as paid: " + error.message, true);
-  }
-}
-
-async function deleteSelected(){
-  if(selected.size===0) return;
-  if(!confirm(`Delete ${selected.size} selected entr${selected.size>1?'ies':'y'}? This cannot be undone.`)) return;
-  
-  try {
-    const ids = [...selected];
-    await postToScript("deleteEntries", { ids });
-    allData = allData.filter(e=> !selected.has(e.id));
-    selected.clear();
-    processAndRender();
-    showMsg("Deleted selected entries.", false);
-  } catch (error) {
-    showMsg("Failed to delete entries: " + error.message, true);
-  }
-}
-
-async function deleteOne(id){
-  if(!confirm("Delete this entry?")) return;
-  
-  try {
-    await postToScript("deleteEntries", { ids:[id] });
-    allData = allData.filter(e=> e.id!==id);
-    selected.delete(id);
-    processAndRender();
-    showMsg("Entry deleted.", false);
-  } catch (error) {
-    showMsg("Failed to delete entry: " + error.message, true);
-  }
-}
-
-// ===== APPS SCRIPT POST =====
-async function postToScript(action, payload){
-  debug('Posting to server: ' + action);
-  
-  try{
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      mode:"no-cors",
-      body: JSON.stringify(Object.assign({ action, secret: SECRET_KEY }, payload||{}))
-    });
-    
-    debug('POST request sent (no-cors mode, response opaque)');
-    // Note: no-cors mode means we can't read the response, but the request was sent
-    
-  }catch(e){
-    debug('POST error: ' + e.message);
-    throw new Error("Failed to contact server: " + e.message);
-  }
-}
-
-// ===== UTILS =====
-function byId(id){ return document.getElementById(id); }
-
-function showLoading(on){
-  byId("loading").style.display = on ? "block" : "none";
-  byId("data").style.display = on ? "none" : "block";
-}
-
-function showMsg(text, isErr){
-  const el = byId("msg");
-  el.innerHTML = `<div class="msg ${isErr?'err':'ok'}">${escapeHtml(text)}</div>`;
-  setTimeout(()=>{ el.innerHTML = ""; }, isErr ? 10000 : 5000);
-}
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-}
-
-function pad(n){ return n<10 ? "0"+n : ""+n; }
-
-function formatDT(d){
-  // dd/mm/yyyy, HH:MM:SS
-  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-// ===== EVENTS =====
-byId("f_name").addEventListener("input", ()=>{ applyFilters(); renderTable(); });
-byId("f_date").addEventListener("change", ()=>{ applyFilters(); renderTable(); });
-byId("f_item").addEventListener("change", ()=>{ applyFilters(); renderTable(); });
-
-// Press Enter to login
-byId("pw").addEventListener("keypress", (e)=>{
-  if(e.key === 'Enter') auth();
-});
-
-debug("Admin page loaded with debugging enabled");
-console.log("Admin page loaded. JSONP reader active with debugging.");
-</script>
+    // Initialize
+    initializeDateFilters();
+    loadRecords();
+  </script>
 </body>
 </html>
